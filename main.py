@@ -58,10 +58,10 @@ class Player(Sprite):
         self.lives = player_lives
 
     def turn_left(self):
-        self.lt(45)
+        self.lt(30)
 
     def turn_right(self):
-        self.rt(45)
+        self.rt(30)
 
     def accelerate(self):
         self.speed += 1
