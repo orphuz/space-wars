@@ -76,10 +76,10 @@ class Player(Sprite):
         self.setheading(0)
 
     def turn_left(self):
-        self.lt(30)
+        self.lt(24)
 
     def turn_right(self):
-        self.rt(30)
+        self.rt(24)
 
     def accelerate(self):
         self.speed += 1
