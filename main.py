@@ -2,6 +2,7 @@
 
 import os
 import random
+import math
 
 #import the Turtle Module for drawing
 import turtle
@@ -37,35 +38,42 @@ class Sprite(turtle.Turtle):
         #Boundary detection
         if self.xcor() > field_width:
             self.setx(field_width)
-            self.rt(60)
+            #Invert xIncrement
+            if self.heading() <= 90:
+                self.setheading(180 - self.heading())
+            else:
+                self.setheading(-90 + self.heading())
+
 
         if self.xcor() < -field_width:
             self.setx(-field_width)
-            self.rt(60)
+            #Invert yxncrement
+            if self.heading() <= 90:
+                self.setheading(90 + self.heading())
+            else:
+                self.setheading(180 - self.heading())
 
         if self.ycor() > field_height:
             self.sety(field_height)
-            self.rt(60)
+            #Invert yIncrement
+            if self.heading() <= 180:
+                self.setheading(- self.heading())
+            else:
+                self.setheading(180 - self.heading())
 
         if self.ycor() < -field_height:
-            self.sety(-field_height)
-            self.rt(60)
-
-    #Collision detection
-    def is_collision(self, other, hitbox):
-        if (self.xcor() >= (other.xcor() - hitbox)) and \
-        (self.xcor() <= (other.xcor() + hitbox)) and \
-        (self.ycor() >= (other.ycor() - hitbox)) and \
-        (self.ycor() <= (other.ycor() + hitbox)):
-            return True
-        else:
-            return False
+            #Invert yIncrement
+            if self.heading() > 180:
+                self.setheading(- self.heading())
+            else:
+                self.setheading(180 - self.heading())
 
 class Player(Sprite):
     def __init__(self, spriteshape, color, startx, starty):
         Sprite.__init__(self, spriteshape, color, startx, starty)
         self.speed = player_speed_default
         self.lives = player_lives
+        self.setheading(0)
 
     def turn_left(self):
         self.lt(30)
@@ -78,6 +86,19 @@ class Player(Sprite):
 
     def decelerate(self):
         self.speed -= 1
+
+    def is_collision(self, other):
+        if (self.xcor() >= (other.xcor() - 20)) and \
+        (self.xcor() <= (other.xcor() + 20)) and \
+        (self.ycor() >= (other.ycor() - 20)) and \
+        (self.ycor() <= (other.ycor() + 20)):
+            return True
+        else:
+            return False
+
+class Missile(Sprite):
+    def __init__(self, spriteshape, color, startx, starty):
+        Sprite.__init__(self, spriteshape, color, startx, starty)
 
 class Enemy(Sprite):
     def __init__(self, spriteshape, color, startx, starty):
@@ -100,6 +121,14 @@ class Missile(Sprite):
             self.setheading(player.heading())
             self.status = "firing"
 
+    def is_collision(self, other):
+        if (self.xcor() >= (other.xcor() - 20)) and \
+        (self.xcor() <= (other.xcor() + 20)) and \
+        (self.ycor() >= (other.ycor() - 20)) and \
+        (self.ycor() <= (other.ycor() + 20)):
+            return True
+        else:
+            return False
 
     def reset(self):
         if self.status == "firing":
@@ -123,8 +152,6 @@ class Game():
         self.lives = 3
         self.state = "playing"
         self.pen = turtle.Turtle()
-        self.draw_border()
-
 
     def draw_border(self):
         #Draw border
@@ -142,7 +169,6 @@ class Game():
 
     def exit(self):
         turtle.mainloop()
-        turtle.done()
         turtle.exitonclick()
 
     def update_score(self, modifier_lives, modifier_score):
@@ -152,6 +178,9 @@ class Game():
 
 #Create game object
 game = Game()
+
+#Draw the border
+game.draw_border()
 
 #Create my sprites
 player = Player("triangle", "white", 0, 0)
@@ -174,14 +203,14 @@ while True:
     missile.move()
 
     #Check for collistion
-    if player.is_collision(enemy, 20):
+    if player.is_collision(enemy):
         x = random.randint(-field_width + 20, field_width - 20)
         y = random.randint(-field_height + 20, field_height - 20)
         enemy.goto(x, y)
         game.update_score(-1, 0) #remove 1 live
 
 
-    if missile.is_collision(enemy, 20):
+    if missile.is_collision(enemy):
         x = random.randint(-field_width + 20, field_width - 20)
         y = random.randint(-field_height + 20, field_height - 20)
         missile.reset()
