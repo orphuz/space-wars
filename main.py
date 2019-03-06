@@ -207,6 +207,7 @@ while True:
         x = random.randint(-field_width + 20, field_width - 20)
         y = random.randint(-field_height + 20, field_height - 20)
         enemy.goto(x, y)
+        enemy.setheading(random.randint(0,359))
         game.update_score(-1, 0) #remove 1 live
 
 
