@@ -42,7 +42,7 @@ class Sprite(turtle.Turtle):
             if self.heading() <= 90:
                 self.setheading(180 - self.heading())
             else:
-                self.setheading(-90 + self.heading())
+                self.setheading(180 - self.heading())
 
 
         if self.xcor() < -field_width:
