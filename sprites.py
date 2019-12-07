@@ -124,8 +124,8 @@ class Missile(Sprite):
     def move(self):
         if self.status == "firing":
             #border check
-            if self.xcor() < -290 or self.xcor() > 290 or \
-            self.ycor() < -290 or self.ycor() > 290:
+            if self.xcor() < -field_width/2 or self.xcor() > field_width/2 or \
+            self.ycor() < -field_height/2 or self.ycor() > field_height/2 :
                 self.reset()
             else:
                 self.fd(self.speed)
