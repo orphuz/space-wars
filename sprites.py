@@ -96,7 +96,7 @@ class Missile(Sprite):
         Sprite.__init__(self, spriteshape, color, startx, starty)
         self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
         self.player = player
-        self.speed = 20
+        self.speed = missile_speed
         self.status = "ready"
         self.goto(-1000, 1000) #hide missle
 
