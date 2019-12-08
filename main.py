@@ -37,16 +37,16 @@ while True:
 
     #Check for collistion with enemies
     if player.is_collision(enemy):
-        x = random.randint(-field_width + 20, field_width - 20)
-        y = random.randint(-field_height + 20, field_height - 20)
+        x = random.randint(-field_width/2, field_width/2)
+        y = random.randint(-field_height/2, field_height/2)
         enemy.goto(x, y)
         enemy.setheading(random.randint(0,359))
         game.update_score(-1, 0) #remove 1 live
 
     #Check for collistion with a missles
     if missile.is_collision(enemy):
-        x = random.randint(-field_width + 20, field_width - 20)
-        y = random.randint(-field_height + 20, field_height - 20)
+        x = random.randint(-field_width/2, field_width/2)
+        y = random.randint(-field_height/2, field_height/2)
         missile.reset()
         enemy.goto(x, y)
         game.update_score(0, 10) #add 10 to score
