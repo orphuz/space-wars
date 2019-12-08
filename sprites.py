@@ -52,6 +52,15 @@ class Sprite(turtle.Turtle):
             else:
                 self.setheading(180 - self.heading())
 
+    def is_collision(self, other):
+        if (self.xcor() >= (other.xcor() - 20)) and \
+        (self.xcor() <= (other.xcor() + 20)) and \
+        (self.ycor() >= (other.ycor() - 20)) and \
+        (self.ycor() <= (other.ycor() + 20)):
+            return True
+        else:
+            return False
+
 class Player(Sprite):
     def __init__(self, spriteshape, color, startx, starty):
         Sprite.__init__(self, spriteshape, color, startx, starty)
@@ -71,14 +80,6 @@ class Player(Sprite):
     def decelerate(self):
         self.speed -= 1
 
-    def is_collision(self, other):
-        if (self.xcor() >= (other.xcor() - 20)) and \
-        (self.xcor() <= (other.xcor() + 20)) and \
-        (self.ycor() >= (other.ycor() - 20)) and \
-        (self.ycor() <= (other.ycor() + 20)):
-            return True
-        else:
-            return False
 
 class Missile(Sprite):
     def __init__(self, spriteshape, color, startx, starty):
@@ -105,15 +106,6 @@ class Missile(Sprite):
             self.goto(self.player.xcor(), self.player.ycor())
             self.setheading(self.player.heading())
             self.status = "firing"
-
-    def is_collision(self, other):
-        if (self.xcor() >= (other.xcor() - 20)) and \
-        (self.xcor() <= (other.xcor() + 20)) and \
-        (self.ycor() >= (other.ycor() - 20)) and \
-        (self.ycor() <= (other.ycor() + 20)):
-            return True
-        else:
-            return False
 
     def reset(self):
         if self.status == "firing":
