@@ -11,4 +11,4 @@ player_turn_rate = 24
 
 enemy_speed = 4
 
-bullet_speed = 20
+missile_speed = 20
