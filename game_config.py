@@ -1,8 +1,10 @@
 # Configuration variabales
 
 # Game Field
-field_width = 300
-field_height = 300
+field_width = 500
+field_height = 500
+
+sprite_radius_default = 15
 
 # Spite Properties
 player_lives = 3

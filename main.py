@@ -16,9 +16,9 @@ game = game.Game()
 game.draw_border()
 
 #Create my sprites
-player = sprites.Player("triangle", "white", 0, 0)
-enemy = sprites.Enemy("circle", "red", random.randint(-field_width/2, field_width/2), random.randint(-field_height/2, field_height/2))
-missile = sprites.Missile("triangle", "yellow", 2 * field_width, 2 * field_height, player) #Missle does always exist but is rendered offscreen when not used
+player = sprites.Player("triangle", 1, "white", 0, 0)
+enemy = sprites.Enemy("circle", 1, "red", random.randint(-field_width/2, field_width/2), random.randint(-field_height/2, field_height/2))
+missile = sprites.Missile("triangle", 0.5, "yellow", 2 * field_width, 2 * field_height, player) #Missle does always exist but is rendered offscreen when not used
 
 #Keyboard Bindings
 turtle.onkey(player.turn_left, "Left")
