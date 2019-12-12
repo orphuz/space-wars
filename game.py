@@ -36,10 +36,38 @@ class Game():
         self.pen.rt(90)
         self.pen.penup()
         self.pen.ht()
+        self.pen.penup() # only done once as startpoint for the repeated "pen.undo()" in show:score
 
     def exit(self):
         turtle.mainloop()
         turtle.exitonclick()
+
+    def erase_score(self):
+        """Erase score by placing a filled rectangle """
+        turtle.setpos(- field_width/2, field_height/2)
+        turtle.color(turtle.bgcolor())
+        turtle.begin_fill()
+        turtle.fd(field_width)
+        turtle.setheading(90)
+        turtle.fd(60)
+        turtle.setheading(180)
+        turtle.fd(field_width)
+        turtle.setheading(270)
+        turtle.fd(60)
+        turtle.setheading(0)
+        turtle.fd(field_width)
+        turtle.end_fill()
+
+
+    def show_score(self):
+        """ Disply the game score """
+        self.erase_score()
+        msg_lives = "Lives: %s" %(self.lives)
+        msg_score = "Score: %s" %(self.score)
+        self.pen.goto(- field_width/2, field_height/2 + 10)
+        self.pen.write(msg_lives, font=("Arial", 16, "normal"))
+        self.pen.goto(- field_width/2, field_height/2 + 30)
+        self.pen.write(msg_score, font=("Arial", 16, "normal"))
 
     def update_score(self, modifier_lives, modifier_score):
         self.lives += modifier_lives

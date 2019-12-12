@@ -15,6 +15,9 @@ game = game.Game()
 #Draw the border
 game.draw_border()
 
+#Draw the game score
+game.show_score()
+
 #Create my sprites
 player = sprites.Player("triangle", 1, "white", 0, 0)
 enemy = sprites.Enemy("circle", 1, "red", random.randint(-field_width/2, field_width/2), random.randint(-field_height/2, field_height/2))
@@ -42,6 +45,7 @@ while True:
         enemy.goto(x, y)
         enemy.setheading(random.randint(0,359))
         game.update_score(-1, 0) #remove 1 live
+        game.show_score()
 
     #Check for collistion with a missles
     if missile.is_collision(enemy):
@@ -50,3 +54,4 @@ while True:
         missile.reset()
         enemy.goto(x, y)
         game.update_score(0, 10) #add 10 to score
+        game.show_score()
