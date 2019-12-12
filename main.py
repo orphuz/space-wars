@@ -45,7 +45,6 @@ while True:
         enemy.goto(x, y)
         enemy.setheading(random.randint(0,359))
         game.update_score(-1, 0) #remove 1 live
-        game.show_score()
 
     #Check for collistion with a missles
     if missile.is_collision(enemy):
@@ -54,4 +53,3 @@ while True:
         missile.reset()
         enemy.goto(x, y)
         game.update_score(0, 10) #add 10 to score
-        game.show_score()
