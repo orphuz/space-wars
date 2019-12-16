@@ -15,5 +15,6 @@ player_speed_default = 4
 player_turn_rate = 24
 
 enemy_speed = 4
+enemy_max_no = 3
 
 missile_speed = 20
