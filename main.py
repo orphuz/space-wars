@@ -4,6 +4,7 @@ import os
 import random
 import math
 import turtle
+import time
 
 import game
 import sprites
@@ -39,6 +40,7 @@ turtle.listen()
 
 #Main game loop
 while True:
+    turtle.update()
     player.move()
     for enemy in enemies:
         enemy.move()
@@ -60,3 +62,5 @@ while True:
             game.update_score(0, 10) #add 10 to score
 
     missile.move()
+
+    time.sleep(0.03) #TODO Implement delay by a certain interval instead of sleep timer

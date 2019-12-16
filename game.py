@@ -7,7 +7,7 @@ turtle.speed(0)
 turtle.bgcolor("black")
 turtle.ht()
 turtle.setundobuffer(1)
-turtle.tracer(1)
+turtle.tracer(0)
 
 # Main Game Class
 class Game():
@@ -19,17 +19,21 @@ class Game():
         self.pen = turtle.Turtle()
         self.t_lives = turtle.Turtle()
         self.t_lives.color("white")
+        self.t_lives.tracer(0)
         self.t_lives.ht()
         self.t_lives.speed(0)
+
         self.t_lives.penup()
         self.t_score = turtle.Turtle()
         self.t_score.color("white")
+        self.t_score.tracer(0)
         self.t_score.ht()
         self.t_score.speed(0)
         self.t_score.penup()
 
+
     def draw_border(self):
-        #Draw border
+        """Draw border"""
         self.pen.speed(0)
         self.pen.color("white")
         self.pen.pensize(3)
@@ -48,6 +52,7 @@ class Game():
         self.pen.ht()
 
     def exit(self):
+        """Exit the game on click """
         turtle.mainloop()
         turtle.exitonclick()
 
@@ -63,7 +68,7 @@ class Game():
         self.t_lives.write(msg_lives, font=("Arial", 16, "normal"))
         self.t_score.penup()
         self.t_score.goto(- field_width/2, field_height/2 + 30)
-        self.t_lives.pendown()
+        self.t_score.pendown()
         self.t_score.write(msg_score, font=("Arial", 16, "normal"))
 
     def update_score(self, modifier_lives, modifier_score):
