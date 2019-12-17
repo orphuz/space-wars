@@ -2,8 +2,8 @@
 game_fps = 60
 
 # Game Field
-field_width = 500
-field_height = 500
+field_width = 600 # max 900
+field_height = 600 # max 700
 
 sprite_radius_default = 15
 
