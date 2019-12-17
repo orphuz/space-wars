@@ -79,4 +79,4 @@ while True:
     if sleep_time > 0:
         time.sleep(sleep_time)
     else:
-        print 'took too long' #TODO Raise error instead of messeage
+        print 'took too long' #TODO Raise error instead of printig this messeage

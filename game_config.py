@@ -12,10 +12,10 @@ modifier_score = 100
 
 # Spite Properties
 player_lives = 3
-player_speed_default = 1
+player_speed_default = 2.5
 player_turn_rate = 24
 
-enemy_speed = 1
+enemy_speed = 2.5
 enemy_max_no = 3
 
-missile_speed = 5
+missile_speed = 10
