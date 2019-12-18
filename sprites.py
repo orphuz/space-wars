@@ -9,6 +9,7 @@ class Sprite(turtle.Turtle):
         turtle.Turtle.__init__(self, shape = spriteshape)
         self.speed(0)
         self.penup()
+        self.tracer(0)
         self.shapesize(spritesize)
         self.radius = spritesize * 10
         self.color(color)
@@ -51,6 +52,7 @@ class Sprite(turtle.Turtle):
                 self.setheading(- self.heading())
             else:
                 self.setheading(180 - self.heading())
+
 
     def is_collision(self, other):
         if (self.xcor() + self.radius >= (other.xcor() - other.radius)) and \
