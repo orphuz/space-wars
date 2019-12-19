@@ -12,8 +12,7 @@ import game_config
 
 config = game_config.Config()
 current_config_values = config.current_values()
-print(current_config_values)
-
+#print(current_config_values)
 
 #Create game object
 game = game.Game(current_config_values)

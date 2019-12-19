@@ -14,7 +14,7 @@ class Game():
         self.config_values = config_values
         self.level = 1
         self.score = 0
-        self.lives = 3
+        self.lives = self.config_values['player_lives']
         self.state = "playing"
         self.pen = turtle.Turtle()
         self.t_lives = turtle.Turtle()
