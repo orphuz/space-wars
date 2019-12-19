@@ -1,6 +1,5 @@
 import turtle
 
-from game_config import *
 
 # Define the GUI
 turtle.speed(0)
@@ -11,7 +10,8 @@ turtle.tracer(0)
 
 # Main Game Class
 class Game():
-    def __init__(self):
+    def __init__(self, config_values):
+        self.config_values = config_values
         self.level = 1
         self.score = 0
         self.lives = 3
@@ -22,7 +22,6 @@ class Game():
         self.t_lives.tracer(0)
         self.t_lives.ht()
         self.t_lives.speed(0)
-
         self.t_lives.penup()
         self.t_score = turtle.Turtle()
         self.t_score.color("white")
@@ -38,15 +37,15 @@ class Game():
         self.pen.color("white")
         self.pen.pensize(3)
         self.pen.penup()
-        self.pen.goto(- field_width/2, field_height/2)
+        self.pen.goto(- self.config_values['field_width']/2, self.config_values['field_height']/2)
         self.pen.pendown()
-        self.pen.fd(field_width) # this will not work for
+        self.pen.fd(self.config_values['field_width']) # this will not work for
         self.pen.rt(90)
-        self.pen.fd(field_height) # this will not work for
+        self.pen.fd(self.config_values['field_height']) # this will not work for
         self.pen.rt(90)
-        self.pen.fd(field_width) # this will not work for
+        self.pen.fd(self.config_values['field_width']) # this will not work for
         self.pen.rt(90)
-        self.pen.fd(field_height) # this will not work for
+        self.pen.fd(self.config_values['field_height']) # this will not work for
         self.pen.rt(90)
         self.pen.penup()
         self.pen.ht()
@@ -63,11 +62,11 @@ class Game():
         msg_lives = "Lives: %s" %(self.lives)
         msg_score = "Score: %s" %(self.score)
         self.t_lives.penup()
-        self.t_lives.goto(- field_width/2, field_height/2 + 10)
+        self.t_lives.goto(- self.config_values['field_width']/2, self.config_values['field_height']/2 + 10)
         self.t_lives.pendown()
         self.t_lives.write(msg_lives, font=("Arial", 16, "normal"))
         self.t_score.penup()
-        self.t_score.goto(- field_width/2, field_height/2 + 30)
+        self.t_score.goto(- self.config_values['field_width']/2, self.config_values['field_height']/2 + 30)
         self.t_score.pendown()
         self.t_score.write(msg_score, font=("Arial", 16, "normal"))
 
