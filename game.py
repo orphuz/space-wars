@@ -91,6 +91,9 @@ class Game():
     def update_score(self, modifier_lives, modifier_score):
         self._lives += modifier_lives
         self._score += modifier_score
+        if self._lives <= 0:    # check for player death
+            self.score = 0
+            self.toggle_game_state()
         self.show_score()
 
     def exit(self):
