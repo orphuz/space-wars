@@ -1,6 +1,7 @@
 import random
 import math
 import turtle
+import logging
 
 class Sprite(turtle.Turtle):
     def __init__(self, spriteshape, spritesize, color, startx, starty, current_config_values):
@@ -15,6 +16,7 @@ class Sprite(turtle.Turtle):
         self.fd(0)
         self.goto(startx, starty)
         self.speed = 1
+        logging.debug("Instance of class {} created!".format(self.__class__))
 
     def move(self):
         self.fd(self.speed)

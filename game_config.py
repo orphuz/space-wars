@@ -1,4 +1,5 @@
 import configparser
+import logging
 
 ## Default Game preferences
 game_fps = 60
@@ -27,7 +28,7 @@ missile_speed = 10
 
 class Config():
     def __init__(self):
-        self.config_file = "config.ini"
+        self._config_file = "config.ini"
         self._DEFAULTVALUES = {
             'game_fps' : 60,
             'field_width' : 600,
@@ -41,20 +42,19 @@ class Config():
             'missile_speed':10
         }
         self.config = configparser.ConfigParser()
-        self.read_file()
-        self.current_values()
+        self._read_file()
 
-
-    def read_file(self):
+    def _read_file(self):
         ''' Read the config file '''
-        self.config.read(self.config_file)
+        self.config.read(self._config_file)
         if self.config == []:
             self.config = self._DEFAULTVALUES
             print('Fallback to default values!')
 
+    @property
     def current_values(self):
         try:
-            Current = {
+            _Current = {
                 'game_fps' : self.config.getfloat('Current','game_fps'),
                 'field_width' : self.config.getint('Current','field_width'),
                 'field_height' : self.config.getint('Current','field_height'),
@@ -67,11 +67,20 @@ class Config():
                 'missile_speed':self.config.getint('Current','missile_speed')
             }
         except configparser.NoSectionError as err:
-            print("NoSectionError: {0}".format(err))
-            print("Falling back to _DEFAULTVALUES")
+            log.error("NoSectionError: {0}".format(err))
+            log.warn("Section [Current] missing - Falling back to {}.format()")
             self.reset_to_default()
-            Current = self._DEFAULTVALUES
-        return Current
+            _Current = self._DEFAULTVALUES
+        return _Current
+
+    @current_values.setter
+    def current_values(self, value_key, value):
+        if value_key not in self.config.values:
+            raise ValueError('%s is not a valid config value' % value_key)
+            logging.warn('%s is not a valid config value' % value_key)
+        else:
+            with open(self._config_file, 'w') as configfile:
+                self.config[value_key] = value
 
     def write_file(self):
         ''' Write the standard config file '''
@@ -82,4 +91,4 @@ class Config():
     def reset_to_default(self):
         self.config['Current'] = self._DEFAULTVALUES
         self.write_file()
-        print('_DEFAULTVALUES set and written to file {}'.format(self.config_file))
+        log.warn('_DEFAULTVALUES set and written to file {}'.format(self.config_file))
