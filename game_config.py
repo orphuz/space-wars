@@ -68,7 +68,7 @@ class Config():
             }
         except configparser.NoSectionError as err:
             log.error("NoSectionError: {0}".format(err))
-            log.warn("Section [Current] missing - Falling back to {}.format()")
+            log.warn("Section [Current] missing - Falling back to <_DEFAULTVALUES>")
             self.reset_to_default()
             _Current = self._DEFAULTVALUES
         return _Current

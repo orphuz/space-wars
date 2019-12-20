@@ -12,11 +12,15 @@ turtle.tracer(0)
 # Main Game Class
 class Game():
     def __init__(self, config_values):
+        self._STATES = {
+            1 : 'running',
+            2 : 'paused'
+        }
         self.config_values = config_values
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
-        self.state = "playing"
+        self._state = 'running'
         self.pen = turtle.Turtle()
         self._t_lives = turtle.Turtle()
         self._t_lives.color("white")
@@ -31,6 +35,22 @@ class Game():
         self._t_score.speed(0)
         self._t_score.penup()
         logging.debug("Instance of class {} created!".format(self.__class__))
+
+    @property
+    def state(self):
+        return self._state
+
+    def toggle_game_state(self):
+        """ Toggles the game state between states <'running'> and <'paused'> """
+        if self._state == 'running':
+            self._state = 'paused'
+            logging.info('Game paused with game.state = %s' % self.state)
+        elif self._state == 'paused':
+            self._state = 'running'
+            logging.info('Game continued with game.state = %s' % self.state)
+        else:
+            logging.error('Current state <%s> is unknown' % self._state)
+            raise ValueError('Current state <%s> is unknown' % self._state)
 
 
     def draw_field(self):
