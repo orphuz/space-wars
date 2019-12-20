@@ -26,14 +26,13 @@ logging.debug("*** Begin GAME ***")
 
 #Create game object
 game = game.Game(current_config_values)
-game.draw_field()
-game.show_score()
-logging.debug("Game object created and drawn")
+game.run()
+
 
 
 ### Create game objects (sprites)
 logging.debug("*** Begin to create game objects (sprites) ***")
-# Create the player sprite
+# Create the player spritet
 player = sprites.Player("triangle", 1, "white", 0, 0, current_config_values)
 
 # Create the enemy sprites
@@ -50,7 +49,9 @@ turtle.onkey(player.turn_right, "Right")
 turtle.onkey(player.accelerate, "Up")
 turtle.onkey(player.decelerate, "Down")
 turtle.onkey(missile.fire, "space")
-turtle.onkey(game.toggle_game_state, "p")
+turtle.onkey(game.toggle_game_state, "Return")
+turtle.onkey(game.pause, "p")
+turtle.onkey(game.run, "r")
 turtle.onkey(game.exit, "Escape")
 turtle.listen()
 logging.debug("Key bindings successfully assigned ")
@@ -102,6 +103,11 @@ while __name__ == '__main__':
         else:
             print 'took too long' #TODO Raise error instead of printig this messeage
             logging.warning("Execution of main loop took too long: {}".format(sleep_time))
+
+    while game.state == 'paused' or game.state == 'over':
+        logging.debug('Game %s - Waiting for player input' % game.state)
+        turtle.update() # includes the check for key press
+        time.sleep(0.1) # Slow down main loop
 
     turtle.update() # includes the check for key press
     time.sleep(0.1) # Slow down main loop
