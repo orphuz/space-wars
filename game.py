@@ -1,5 +1,6 @@
 import turtle
 import logging
+import sys
 
 
 # Define the GUI
@@ -73,6 +74,10 @@ class Game():
         self.draw_over(self._score)
         self._score = 0
         self._lives = self.config_values['player_lives']
+
+    def exit(self):
+        """Exit the game on click """
+        self.state = "exit"
 
     def draw_field(self):
         """Draw border"""
@@ -163,9 +168,3 @@ class Game():
         if self._lives <= 0:    # check for player death
             self.over()
         self.show_score()
-
-    def exit(self):
-        """Exit the game on click """
-        logging.warn("Exiting python program via turtle")
-        turtle.mainloop()
-        turtle.exitonclick()
