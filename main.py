@@ -1,5 +1,4 @@
-#My SpaceWars Ganme by Kalli
-
+#My SpaceWars Game by Kalli
 import os
 import sys
 import random
@@ -27,9 +26,6 @@ logging.debug("*** Begin GAME ***")
 
 #Create game object
 game = game.Game(current_config_values)
-game.run()
-
-
 
 ### Create game objects (sprites)
 logging.debug("*** Begin to create game objects (sprites) ***")
@@ -50,13 +46,14 @@ turtle.onkey(player.turn_right, "Right")
 turtle.onkey(player.accelerate, "Up")
 turtle.onkey(player.decelerate, "Down")
 turtle.onkey(missile.fire, "space")
-turtle.onkey(game.toggle_game_state, "Return")
+turtle.onkey(game.confirm, "Return")
 turtle.onkey(game.pause, "p")
 turtle.onkey(game.run, "r")
-turtle.onkey(game.exit, "Escape")
+turtle.onkey(game.cancel, "Escape")
 turtle.listen()
 logging.debug("Key bindings successfully assigned ")
 
+game.welcome()
 
 # Prepare for main loop to be of constant duration
 loop_delta = 1./current_config_values['game_fps'] #calculate loop time based on fixed FPS value
@@ -66,7 +63,7 @@ while __name__ == '__main__':
     #logging.debug("Start of MAIN loop with game.state = %s" % game.state)
     current_time = target_time = time.clock() # set initial values for the timer loop
 
-    while game.state == 'running':
+    while game.state == game.running:
         #### loop frequency evaluation
         #logging.debug("Start of GAME loop with game.state = %s" % game.state)
         previous_time, current_time = current_time, time.clock() #update relative timestamps
@@ -106,12 +103,12 @@ while __name__ == '__main__':
             print 'took too long' #TODO Raise error instead of printig this messeage
             logging.warning("Execution of main loop took too long: {}".format(sleep_time))
 
-    while game.state == 'paused' or game.state == 'over':
-        logging.debug('Game %s - Waiting for player input' % game.state)
+    while game.state == game.welcoming or game.state == game.paused or game.state == game.over:
+        logging.debug('Game %s - Waiting for player input' % str(game.state.name))
         turtle.update() # includes the check for key press
         time.sleep(0.1) # Slow down main loop
 
-    if game.state == "exit":
+    if game.state == game.exiting:
         logging.warn("Exiting python program via turtle")
         turtle.bye
         sys.exit()

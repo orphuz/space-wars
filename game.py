@@ -1,7 +1,7 @@
 import turtle
 import logging
-import sys
 
+import states
 
 # Define the GUI
 turtle.speed(0)
@@ -17,14 +17,20 @@ class Game():
             1 : 'welcome',
             2 : 'running',
             3 : 'paused',
-            4 : 'over'
+            4 : 'over',
+            5 : 'exit'
         }
+
         self.config_values = config_values
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
-        self._state = 'paused'
+        #self._state = 'paused'
         self.pen = turtle.Turtle()
+        self.pen.speed(0)
+        self.pen.clear()
+        self.pen.color("white")
+        self.pen.pensize(3)
         self._t_lives = turtle.Turtle()
         self._t_lives.color("white")
         self._t_lives.tracer(0)
@@ -39,6 +45,27 @@ class Game():
         self._t_score.penup()
         logging.debug("Instance of class {} created!".format(self.__class__))
 
+        self.welcoming = states.State("welcoming", {
+            "confirm": "self.run()",
+            "cancel": "self.exit()"
+        })
+        self.running = states.State("running", {
+            "cancel": "self.pause()",
+            "player_death": "self.dead()"
+        })
+        self.paused = states.State("paused", {
+            "confirm": "self.run()",
+            "cancel": "self.welcome()"
+        })
+        self.over = states.State("over", {
+            "confirm": "self.run()",
+            "cancel": "self.exit()"
+        })
+        self.exiting = states.State("exiting", {"cancel": "self.exit()"}) # Hack
+
+        self.state = self.welcoming
+
+
     @property
     def state(self):
         return self._state
@@ -51,40 +78,76 @@ class Game():
         self._state = state_request
         logging.debug('Set game.state = %s' % self.state)
 
-    def toggle_game_state(self):
-        """ Toggles the game state between states <'running'> and <'paused'> """
-        if self.state == 'running':
-            self.pause()
-        elif self.state == 'paused' or self.state == 'over':
-            self.run()
+    # def toggle_game_state(self):
+    #     """ Toggles the game state between states <'running'> and <'paused'> """
+    #     if self.state == 'running':
+    #         self.pause()
+    #     elif self.state == 'paused' or self.state == 'over':
+    #         self.run()
+
+
+    def confirm(self):
+        eval(self.state.transit("confirm"))
+
+    def cancel(self):
+        eval(self.state.transit("cancel"))
+
+    def welcome(self):
+        """ Welcome screen aka Intro """
+        self.draw_welcome()
+        self.state = self.welcoming
 
     def run(self):
         """ Draw all game elements and start the game """
         self.draw_field()
-        self.show_score()
-        self.state = 'running'
+        self.draw_score()
+        self.state = self.running
         logging.debug('Game running')
 
     def pause(self):
         self.draw_pause()
-        self.state = 'paused'
+        self.state = self.paused
 
-    def over(self):
-        self.state = 'over'
+    def dead(self):
+        self.state = self.over
         self.draw_over(self._score)
         self._score = 0
         self._lives = self.config_values['player_lives']
 
     def exit(self):
         """Exit the game on click """
-        self.state = "exit"
+        self.state = self.exiting
+
+    def draw_welcome(self):
+        """ Draw the welcome screen """
+        self.pen.clear()
+        self.pen.penup()
+        self.pen.setheading(0)
+        self.pen.goto(- self.config_values['field_width']/4, self.config_values['field_height']/4)
+        self.pen.pendown()
+        self.pen.fd(self.config_values['field_width'] / 2)
+        self.pen.rt(90)
+        self.pen.fd(self.config_values['field_height'] / 2)
+        self.pen.rt(90)
+        self.pen.fd(self.config_values['field_width'] / 2)
+        self.pen.rt(90)
+        self.pen.fd(self.config_values['field_height'] / 2)
+        self.pen.penup()
+        self.pen.goto(0, 0)
+        self.pen.pendown()
+        self.pen.write('WELCOME TO: Space Wars', font=("Arial", 28, "normal"), align = 'center')
+        self.pen.penup()
+        self.pen.goto(0, -10)
+        self.pen.pendown()
+        msg_score = "Press <ENTER> to start"
+        self.pen.write(msg_score, font=("Arial", 12, "normal"), align = 'center')
+        self.pen.penup()
+        self.pen.ht()
+        logging.debug("Welcome screen drawn")
 
     def draw_field(self):
         """Draw border"""
-        self.pen.speed(0)
         self.pen.clear()
-        self.pen.color("white")
-        self.pen.pensize(3)
         self.pen.penup()
         self.pen.setheading(0)
         self.pen.goto(- self.config_values['field_width']/2, self.config_values['field_height']/2)
@@ -101,7 +164,7 @@ class Game():
         self.pen.ht()
         logging.debug("Game field drawn")
 
-    def show_score(self):
+    def draw_score(self):
         """ Disply the game score """
         self._t_lives.undo()
         self._t_score.undo()
@@ -118,6 +181,7 @@ class Game():
         logging.debug("Score drawn")
 
     def draw_pause(self):
+        self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
         self.pen.goto(- self.config_values['field_width']/4, self.config_values['field_height']/4)
@@ -138,6 +202,7 @@ class Game():
         logging.debug("Pause screen drawn")
 
     def draw_over(self, final_score):
+        self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
         self.pen.goto(- self.config_values['field_width']/4, self.config_values['field_height']/4)
@@ -166,5 +231,5 @@ class Game():
         self._lives += modifier_lives
         self._score += modifier_score
         if self._lives <= 0:    # check for player death
-            self.over()
-        self.show_score()
+            eval(self.state.transit("player_death"))
+        self.draw_score()
