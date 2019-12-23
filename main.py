@@ -1,6 +1,7 @@
 #My SpaceWars Ganme by Kalli
 
 import os
+import sys
 import random
 import math
 import turtle
@@ -72,6 +73,12 @@ while __name__ == '__main__':
         time_delta = current_time - previous_time
 
         turtle.update()
+
+        if game.state == "exit":
+            logging.warn("Exiting python program via turtle")
+            turtle.bye
+            sys.exit()
+
         player.move()
         for enemy in enemies:
             enemy.move()
@@ -110,4 +117,5 @@ while __name__ == '__main__':
         time.sleep(0.1) # Slow down main loop
 
     turtle.update() # includes the check for key press
+    logging.debug("Main Loop")
     time.sleep(0.1) # Slow down main loop
