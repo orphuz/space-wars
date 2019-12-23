@@ -74,11 +74,6 @@ while __name__ == '__main__':
 
         turtle.update()
 
-        if game.state == "exit":
-            logging.warn("Exiting python program via turtle")
-            turtle.bye
-            sys.exit()
-
         player.move()
         for enemy in enemies:
             enemy.move()
@@ -116,6 +111,11 @@ while __name__ == '__main__':
         turtle.update() # includes the check for key press
         time.sleep(0.1) # Slow down main loop
 
+    if game.state == "exit":
+        logging.warn("Exiting python program via turtle")
+        turtle.bye
+        sys.exit()
+
     turtle.update() # includes the check for key press
-    logging.debug("Main Loop")
+
     time.sleep(0.1) # Slow down main loop
