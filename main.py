@@ -24,9 +24,6 @@ config = game_config.Config()
 current_config_values = config.current_values
 logging.debug("*** Begin GAME ***")
 
-#Create game object
-game = game.Game(current_config_values)
-
 ### Create game objects (sprites)
 logging.debug("*** Begin to create game objects (sprites) ***")
 # Create the player spritet
@@ -38,6 +35,10 @@ for i in range(current_config_values['enemy_max_no']):
     enemies.append(sprites.Enemy("circle", 1, current_config_values))
 
 missile = sprites.Missile("triangle", 0.5, current_config_values, player) #Missle does always exist but is rendered offscreen when not used
+
+#Create game object
+game = game.Game(current_config_values, player, enemies, missile)
+game.welcome()
 
 # Assign Keyboard Bindings
 logging.debug("Assigning key bindings")
@@ -52,8 +53,6 @@ turtle.onkey(game.run, "r")
 turtle.onkey(game.cancel, "Escape")
 turtle.listen()
 logging.debug("Key bindings successfully assigned ")
-
-game.welcome()
 
 # Prepare for main loop to be of constant duration
 loop_delta = 1./current_config_values['game_fps'] #calculate loop time based on fixed FPS value

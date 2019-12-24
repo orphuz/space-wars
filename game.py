@@ -4,44 +4,31 @@ import logging
 import states
 
 # Define the GUI
-turtle.speed(0)
 turtle.bgcolor("black")
-turtle.ht()
+turtle.color("white")
 turtle.setundobuffer(1)
-turtle.tracer(0)
+turtle.ht()
 
 # Main Game Class
 class Game():
-    def __init__(self, config_values):
-        self._STATES = {
-            1 : 'welcome',
-            2 : 'running',
-            3 : 'paused',
-            4 : 'over',
-            5 : 'exit'
-        }
-
+    def __init__(self, config_values, player, enemies, missile):
         self.config_values = config_values
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
-        #self._state = 'paused'
-        self.pen = turtle.Turtle()
-        self.pen.speed(0)
-        self.pen.clear()
-        self.pen.color("white")
-        self.pen.pensize(3)
-        self._t_lives = turtle.Turtle()
-        self._t_lives.color("white")
-        self._t_lives.tracer(0)
+        self.player = player
+        self.enemies = enemies
+        self.missile = missile
+        self.pen = turtle.Turtle(visible = False)
+        self.pen.color('white')
+        self.pen.ht()
+        self._t_lives = turtle.Turtle(visible = False)
+        self._t_lives.color('white')
         self._t_lives.ht()
-        self._t_lives.speed(0)
         self._t_lives.penup()
-        self._t_score = turtle.Turtle()
-        self._t_score.color("white")
-        self._t_score.tracer(0)
+        self._t_score = turtle.Turtle(visible = False)
+        self._t_score.color('white')
         self._t_score.ht()
-        self._t_score.speed(0)
         self._t_score.penup()
         logging.debug("Instance of class {} created!".format(self.__class__))
 
@@ -118,8 +105,21 @@ class Game():
         """Exit the game on click """
         self.state = self.exiting
 
+    def hide_sprites(self):
+        self.player.ht()
+        for enemy in self.enemies:
+            enemy.ht()
+        self.missile.ht()
+
+    def show_sprites(self):
+        self.player.st()
+        for enemy in self.enemies:
+            enemy.st()
+        self.missile.st()
+
     def draw_welcome(self):
         """ Draw the welcome screen """
+        self.hide_sprites()
         self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
@@ -147,6 +147,7 @@ class Game():
 
     def draw_field(self):
         """Draw border"""
+        self.show_sprites()
         self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
@@ -181,6 +182,7 @@ class Game():
         logging.debug("Score drawn")
 
     def draw_pause(self):
+        self.hide_sprites()
         self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
@@ -202,6 +204,7 @@ class Game():
         logging.debug("Pause screen drawn")
 
     def draw_over(self, final_score):
+        self.hide_sprites()
         self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
