@@ -9,7 +9,7 @@ class Sprite(turtle.Turtle):
         self._name = 'Sprite'
         self.config_values = current_config_values
         self.screen.tracer(0)
-        self.speed(0)
+        #self.speed(0)
         self.penup()
         self.shapesize(spritesize)
         self.radius = spritesize * 10

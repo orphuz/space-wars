@@ -67,28 +67,28 @@ class Config():
                 'missile_speed':self.config.getint('Current','missile_speed')
             }
         except configparser.NoSectionError as err:
-            log.error("NoSectionError: {0}".format(err))
-            log.warn("Section [Current] missing - Falling back to <_DEFAULTVALUES>")
+            logging.error("NoSectionError: {0}".format(err))
+            logging.warn("Section [Current] missing - Falling back to <_DEFAULTVALUES>")
             self.reset_to_default()
             _Current = self._DEFAULTVALUES
         return _Current
 
     @current_values.setter
     def current_values(self, value_key, value):
-        if value_key not in self.config.values:
-            raise ValueError('%s is not a valid config value' % value_key)
+        if value_key not in list(self.config.values):
             logging.warn('%s is not a valid config value' % value_key)
+            raise ValueError('%s is not a valid config value' % value_key)
         else:
             with open(self._config_file, 'w') as configfile:
                 self.config[value_key] = value
 
     def write_file(self):
         ''' Write the standard config file '''
-        self.config['Current'] = self.current_values()
-        with open(self.config_file, 'w') as configfile:
+        self.config['Current'] = self.current_values
+        with open(self._config_file, 'w') as configfile:
            self.config.write(configfile)
 
     def reset_to_default(self):
         self.config['Current'] = self._DEFAULTVALUES
         self.write_file()
-        log.warn('_DEFAULTVALUES set and written to file {}'.format(self.config_file))
+        logging.warn('_DEFAULTVALUES set and written to file {}'.format(self._config_file))
