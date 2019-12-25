@@ -8,9 +8,9 @@ class Sprite(turtle.Turtle):
         turtle.Turtle.__init__(self, shape = spriteshape)
         self._name = 'Sprite'
         self.config_values = current_config_values
+        self.screen.tracer(0)
         self.speed(0)
         self.penup()
-        self.tracer(0)
         self.shapesize(spritesize)
         self.radius = spritesize * 10
         self.color(color)

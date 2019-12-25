@@ -20,15 +20,13 @@ class Game():
         self.enemies = enemies
         self.missile = missile
         self.pen = turtle.Turtle(visible = False)
+        self.pen.screen.tracer(0)
         self.pen.color('white')
+        self.pen.speed(0)
         self.pen.ht()
-        self._t_lives = turtle.Turtle(visible = False)
-        self._t_lives.color('white')
-        self._t_lives.ht()
-        self._t_lives.penup()
         self._t_score = turtle.Turtle(visible = False)
         self._t_score.color('white')
-        self._t_score.ht()
+        # self._t_score.ht()
         self._t_score.penup()
         logging.debug("Instance of class {} created!".format(self.__class__))
 
@@ -49,7 +47,14 @@ class Game():
             "cancel": "self.exit()"
         })
         self.exiting = states.State("exiting", {"cancel": "self.exit()"}) # Hack
-
+        global STATES
+        STATES = (
+            self.welcoming, 
+            self.running,
+            self.paused,
+            self.over,
+            self.exiting
+        )
         self.state = self.welcoming
 
 
@@ -59,19 +64,11 @@ class Game():
 
     @state.setter
     def state(self, state_request):
-        if state_request not in _STATES:
+        if state_request not in STATES:
             logging.error('Requested state <%s> is unknown' % state_request)
             raise ValueError('Requested state <%s> is unknown' % state_request)
         self._state = state_request
         logging.debug('Set game.state = %s' % self.state)
-
-    # def toggle_game_state(self):
-    #     """ Toggles the game state between states <'running'> and <'paused'> """
-    #     if self.state == 'running':
-    #         self.pause()
-    #     elif self.state == 'paused' or self.state == 'over':
-    #         self.run()
-
 
     def confirm(self):
         eval(self.state.transit("confirm"))
@@ -117,33 +114,43 @@ class Game():
             enemy.st()
         self.missile.st()
 
-    def draw_welcome(self):
-        """ Draw the welcome screen """
+    def draw_screen(self, title, height, width, text_01 = "", text_02 = "", text_03 = ""):
+        """ Template function to draw game screens """
         self.hide_sprites()
         self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
-        self.pen.goto(- self.config_values['field_width']/4, self.config_values['field_height']/4)
+        self.pen.goto(- height / 2, width / 2)
         self.pen.pendown()
-        self.pen.fd(self.config_values['field_width'] / 2)
+        self.pen.fd(width)
         self.pen.rt(90)
-        self.pen.fd(self.config_values['field_height'] / 2)
+        self.pen.fd(height)
         self.pen.rt(90)
-        self.pen.fd(self.config_values['field_width'] / 2)
+        self.pen.fd(width)
         self.pen.rt(90)
-        self.pen.fd(self.config_values['field_height'] / 2)
+        self.pen.fd(height)
         self.pen.penup()
-        self.pen.goto(0, 0)
+        self.pen.goto(0, 60)
         self.pen.pendown()
-        self.pen.write('WELCOME TO: Space Wars', font=("Arial", 28, "normal"), align = 'center')
+        self.pen.write(title, font=("Arial", 28, "normal"), align = 'center')
         self.pen.penup()
-        self.pen.goto(0, -10)
-        self.pen.pendown()
-        msg_score = "Press <ENTER> to start"
-        self.pen.write(msg_score, font=("Arial", 12, "normal"), align = 'center')
-        self.pen.penup()
-        self.pen.ht()
-        logging.debug("Welcome screen drawn")
+        if text_01 != "":
+            self.pen.goto(0, -30)
+            self.pen.pendown()
+            self.pen.write(text_01, font=("Arial", 12, "normal"), align = 'center')
+            self.pen.penup()
+        if text_02 != "":
+            self.pen.goto(- width / 2 + 10 , - height /2 + 30)
+            self.pen.pendown()
+            self.pen.write(text_02, font=("Arial", 12, "normal"), align = 'left')
+            self.pen.penup()
+        if text_03 != "":
+            self.pen.goto(- width / 2 + 10 , - height /2 + 10)
+            self.pen.pendown()
+            self.pen.write(text_03, font=("Arial", 12, "normal"), align = 'left')
+            self.pen.penup()
+   
+        logging.debug("<{}> drawn".format(title))
 
     def draw_field(self):
         """Draw border"""
@@ -167,70 +174,32 @@ class Game():
 
     def draw_score(self):
         """ Disply the game score """
-        self._t_lives.undo()
-        self._t_score.undo()
+        self._t_score.clear()
         msg_lives = "Lives: %s" %(self._lives)
         msg_score = "Score: %s" %(self._score)
-        self._t_lives.penup()
-        self._t_lives.goto(- self.config_values['field_width']/2, self.config_values['field_height']/2 + 10)
-        self._t_lives.pendown()
-        self._t_lives.write(msg_lives, font=("Arial", 16, "normal"))
+        self._t_score.penup()
+        self._t_score.goto(- self.config_values['field_width']/2, self.config_values['field_height']/2 + 10)
+        self._t_score.pendown()
+        self._t_score.write(msg_lives, font=("Arial", 16, "normal"))
         self._t_score.penup()
         self._t_score.goto(- self.config_values['field_width']/2, self.config_values['field_height']/2 + 30)
         self._t_score.pendown()
         self._t_score.write(msg_score, font=("Arial", 16, "normal"))
         logging.debug("Score drawn")
 
+    def draw_welcome(self):
+        """ Draw the welcome screen """
+        self.draw_screen("SPACE WARS", 300, 300, "", "Press <Return> to start", "Press <ESC> to exit")
+
     def draw_pause(self):
-        self.hide_sprites()
-        self.pen.clear()
-        self.pen.penup()
-        self.pen.setheading(0)
-        self.pen.goto(- self.config_values['field_width']/4, self.config_values['field_height']/4)
-        self.pen.pendown()
-        self.pen.fd(self.config_values['field_width'] / 2)
-        self.pen.rt(90)
-        self.pen.fd(self.config_values['field_height'] / 2)
-        self.pen.rt(90)
-        self.pen.fd(self.config_values['field_width'] / 2)
-        self.pen.rt(90)
-        self.pen.fd(self.config_values['field_height'] / 2)
-        self.pen.penup()
-        self.pen.goto(0, 0)
-        self.pen.pendown()
-        self.pen.write('GAME PAUSED', font=("Arial", 28, "normal"), align = 'center')
-        self.pen.penup()
-        self.pen.ht()
-        logging.debug("Pause screen drawn")
+        self.draw_screen("GAME PAUSED", 300, 300, "", "Press <Return> to continue", "Press <ESC> to exit")
 
     def draw_over(self, final_score):
-        self.hide_sprites()
-        self.pen.clear()
-        self.pen.penup()
-        self.pen.setheading(0)
-        self.pen.goto(- self.config_values['field_width']/4, self.config_values['field_height']/4)
-        self.pen.pendown()
-        self.pen.fd(self.config_values['field_width'] / 2)
-        self.pen.rt(90)
-        self.pen.fd(self.config_values['field_height'] / 2)
-        self.pen.rt(90)
-        self.pen.fd(self.config_values['field_width'] / 2)
-        self.pen.rt(90)
-        self.pen.fd(self.config_values['field_height'] / 2)
-        self.pen.penup()
-        self.pen.goto(0, 30)
-        self.pen.pendown()
-        self.pen.write('GAME OVER', font=("Arial", 28, "normal"), align = 'center')
-        self.pen.penup()
-        self.pen.goto(0, -10)
-        self.pen.pendown()
-        msg_score = "Your final score: %s" %(self._score)
-        self.pen.write(msg_score, font=("Arial", 12, "normal"), align = 'center')
-        self.pen.penup()
-        self.pen.ht()
-        logging.debug("Game Over screen drawn")
+        """ Draw game over screen """
+        self.draw_screen("GAME OVER", 300, 300, "Your final score: {}".format(self._score), "Press <Return> to continue", "Press <ESC> to exit")
 
     def update_score(self, modifier_lives, modifier_score):
+        """ Update the game score based on the given modifiers and draw it to the canvas """
         self._lives += modifier_lives
         self._score += modifier_score
         if self._lives <= 0:    # check for player death

@@ -99,7 +99,7 @@ while __name__ == '__main__':
             # logging.debug("Sleeping for: {}".format(sleep_time))
             time.sleep(sleep_time)
         else:
-            print 'took too long' #TODO Raise error instead of printig this messeage
+            print('took too long') #TODO Raise error instead of printig this messeage
             logging.warning("Execution of main loop took too long: {}".format(sleep_time))
 
     while game.state == game.welcoming or game.state == game.paused or game.state == game.over:
