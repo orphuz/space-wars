@@ -44,6 +44,7 @@ class Game():
             "cancel": "self.exit()"
         })
         self.exiting = states.State("exiting", {"cancel": "self.exit()"}) # Hack
+        
         global STATES
         STATES = (
             self.welcoming, 
@@ -108,6 +109,9 @@ class Game():
     def cancel(self):
         eval(self.state.transit("cancel"))
 
+    def death(self):
+        eval(self.state.transit("player_death"))
+
     def welcome(self):
         """ Welcome screen aka Intro """
         self.draw_welcome()
@@ -125,7 +129,7 @@ class Game():
     
     def dead(self):
         self.state = self.over
-        self.draw_over(self._score)
+        self.draw_over()
         self._score = 0
         self._lives = self.config_values['player_lives']
 
@@ -192,7 +196,7 @@ class Game():
         self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
-        self.pen.goto(- self.config_values['field_width']/2, self.config_values['field_height']/2)
+        self.pen.goto(- int(float(self.config_values['field_width'])) / 2, int(float(self.config_values['field_height']) / 2))
         self.pen.pendown()
         self.pen.fd(self.config_values['field_width'])
         self.pen.rt(90)
@@ -212,11 +216,11 @@ class Game():
         msg_lives = "Lives: %s" %(self._lives)
         msg_score = "Score: %s" %(self._score)
         self._t_score.penup()
-        self._t_score.goto(- self.config_values['field_width']/2, self.config_values['field_height']/2 + 10)
+        self._t_score.goto(- int(float(self.config_values['field_width']) / 2), int(float(self.config_values['field_height']) / 2 + 10))
         self._t_score.pendown()
         self._t_score.write(msg_lives, font=("Arial", 16, "normal"))
         self._t_score.penup()
-        self._t_score.goto(- self.config_values['field_width']/2, self.config_values['field_height']/2 + 30)
+        self._t_score.goto(- int(float(self.config_values['field_width']) / 2) , int(float(self.config_values['field_height']) / 2 + 30))
         self._t_score.pendown()
         self._t_score.write(msg_score, font=("Arial", 16, "normal"))
         logging.debug("Score drawn")
@@ -228,7 +232,7 @@ class Game():
     def draw_pause(self):
         self.draw_screen("GAME PAUSED", 300, 300, "", "Press <Return> to continue", "Press <ESC> to go to start screen")
 
-    def draw_over(self, final_score):
+    def draw_over(self):
         """ Draw game over screen """
         self.draw_screen("GAME OVER", 300, 300, "Your final score: {}".format(self._score), "Press <Return> to continue", "Press <ESC> to exit")
 
@@ -236,6 +240,6 @@ class Game():
         """ Update the game score based on the given modifiers and draw it to the canvas """
         self._lives += modifier_lives
         self._score += modifier_score
-        if self._lives <= 0:    # check for player death
-            eval(self.state.transit("player_death"))
         self.draw_score()
+        if self._lives <= 0:    # check for player death
+            self.death()

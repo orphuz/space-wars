@@ -38,19 +38,14 @@ while game.state != game.exiting:
 
             #Check for collistion with enemies
             if game.player.is_collision(enemy):
-                x = random.randint(- game.config_values['field_width'] / 2, game.config_values['field_width'] / 2)
-                y = random.randint(- game.config_values['field_height'] / 2, game.config_values['field_height'] / 2)
-                enemy.goto(x, y)
-                enemy.setheading(random.randint(0,359))
                 game.update_score(-1, 0) #remove 1 live
+                enemy.die()    
 
             #Check for collistion with a missles
             if game.missile.is_collision(enemy):
-                x = random.randint(- game.config_values['field_width'] / 2, int(game.config_values['field_width']/2))
-                y = random.randint(- game.config_values['field_height'] / 2, int(game.config_values['field_height']/2))
-                game.missile.reset()
-                enemy.goto(x, y)
                 game.update_score(0, enemy.value) #add 10 to score
+                enemy.die()
+                game.missile.reset()        
     
         #### sleep management to achieve constant FPS
         target_time += loop_delta
