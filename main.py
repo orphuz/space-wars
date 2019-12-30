@@ -38,13 +38,16 @@ while game.state != game.exiting:
 
             #Check for collistion with enemies
             if game.player.is_collision(enemy):
+                game.despawn_enemy(enemy)
+                game.spawn_enemy()
                 game.update_score(-1, 0) #remove 1 live
-                enemy.die()    
 
             #Check for collistion with a missles
-            if game.missile.is_collision(enemy):
+            elif game.missile.is_collision(enemy):
+                game.despawn_enemy(enemy)
+                game.spawn_enemy()
+                game.spawn_enemy()
                 game.update_score(0, enemy.value) #add 10 to score
-                enemy.die()
                 game.missile.reset()        
     
         #### sleep management to achieve constant FPS

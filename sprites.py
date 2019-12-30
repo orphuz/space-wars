@@ -124,11 +124,11 @@ class Enemy(Sprite):
         self._name = 'Enemy'
         self.speed = self.config_values['enemy_speed']
         self.value = 100
-        
-    def die(self):
-        """ Death of enemy currently only radomly sets it to a new position """
-        self.random_position()
         self.random_heading()
+
+    def despawn(self):
+        """ Death of enemy currently only radomly sets it to a new position """
+        self.ht()
 
 class Missile(Sprite):
     def __init__(self, spriteshape, spritesize, current_config_values, player):

@@ -16,6 +16,7 @@ class Game():
         """ Main self class """
         self.name = name
         self.config_values = self.load_config()
+        self.enemies = []
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
@@ -39,10 +40,10 @@ class Game():
         })
         self.paused = states.State("paused", {
             "confirm": "self.run()",
-            "cancel": "self.welcome()"
+            "cancel": "self.dead()"
         })
         self.over = states.State("over", {
-            "confirm": "self.run()",
+            "confirm": "self.welcome()",
             "cancel": "self.exit()"
         })
         self.exiting = states.State("exiting", {"cancel": "self.exit()"}) # Hack
@@ -84,17 +85,22 @@ class Game():
         """ Create sprites for player, missile and enemies """
         self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values)
         self.missile = sprites.Missile("triangle", 0.5, self.config_values, self.player) #Missle does always exist but is rendered offscreen when not used
-        self.enemies = list()
-        for i in range(self.config_values['enemy_max_no']):
-            self.enemies.append(sprites.Enemy("circle", 1, self.config_values)) 
+        # for i in range(self.config_values['enemy_max_no']):
+        #     self.spawn_enemy()
+
+    def spawn_enemy(self):
+        """ Spawns an onject of type enemy """
+        self.enemies.append(sprites.Enemy("circle", 1, self.config_values))
+        logging.debug("Enemy spawned, now: {}".format(len(self.enemies)))
+
+    def despawn_enemy(self, enemy_object):
+        """ Kills an enemy object by removing it's instance it fron the game.enemies list """
+        enemy_object.despawn()
+        self.enemies.remove(enemy_object)
+        logging.debug("Enemy despawned, now left: {}".format(len(self.enemies)))
 
     def bind_keys(self):
         """ Assign Keyboard Bindings """
-        # player_ctrl_left = partial(self.player_ctrl, self.player.turn_left)
-        # player_ctrl_right = partial(self.player_ctrl, self.player.turn_right)
-        # player_ctrl_accelerate = partial(self.player_ctrl, self.player.accelerate)
-        # player_ctrl_decelerate = partial(self.player_ctrl, self.player.decelerate)
-        # player_ctrl_fire = partial(self.player_ctrl, self.missile.fire)
         self.pen.screen.onkey(partial(self.player_ctrl, self.player.turn_left), "Left")
         self.pen.screen.onkey(partial(self.player_ctrl, self.player.turn_right), "Right")
         self.pen.screen.onkey(partial(self.player_ctrl, self.player.accelerate), "Up")
@@ -121,7 +127,8 @@ class Game():
 
     def confirm(self):
         """ Player input to confirm """
-        eval(self.state.transit("confirm"))
+        exec_function = self.state.transit("confirm")
+        eval(exec_function)
 
     def cancel(self):
         """ Player input to cancel """
@@ -133,6 +140,9 @@ class Game():
 
     def welcome(self):
         """ Welcome screen aka Intro """
+        self.enemies.clear()
+        for i in range(self.config_values['enemy_max_no']):
+            self.spawn_enemy()
         self.draw_welcome()
         self.state = self.welcoming
 
@@ -148,6 +158,10 @@ class Game():
     
     def dead(self):
         self.state = self.over
+        for enemy in self.enemies:
+            enemy.ht()
+        self.enemies.clear()
+        logging.debug('Deleted all enemies, now left: {}'.format(len(self.enemies)))
         self.draw_over()
         self._score = 0
         self._lives = self.config_values['player_lives']
