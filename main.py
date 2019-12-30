@@ -31,24 +31,28 @@ while game.state != game.exiting:
 
         game.player.move()
 
-        game.missile.move()
-
         for enemy in game.enemies:
             enemy.move()
 
-            #Check for collistion with enemies
+        for missile in game.player.missiles_shot:
+            missile.move()
+
+        for enemy in game.enemies:
+            #Check for collision with enemies
             if game.player.is_collision(enemy):
-                game.despawn_enemy(enemy)
+                enemy.despawn()
                 game.spawn_enemy()
                 game.update_score(-1, 0) #remove 1 live
 
-            #Check for collistion with a missles
-            elif game.missile.is_collision(enemy):
-                game.despawn_enemy(enemy)
-                game.spawn_enemy()
-                game.spawn_enemy()
-                game.update_score(0, enemy.value) #add 10 to score
-                game.missile.reset()        
+            for missile in game.player.missiles_shot:
+                # Check for collision with all missles shot
+                if missile.is_collision(enemy):
+                    enemy.despawn()
+                    missile.despawn()
+                    game.spawn_enemy()
+                    game.spawn_enemy()
+                    game.update_score(0, enemy.value) #add 10 to score
+                            
     
         #### sleep management to achieve constant FPS
         target_time += loop_delta

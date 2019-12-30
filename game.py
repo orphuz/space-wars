@@ -83,21 +83,27 @@ class Game():
 
     def create_sprites(self):
         """ Create sprites for player, missile and enemies """
-        self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values)
-        self.missile = sprites.Missile("triangle", 0.5, self.config_values, self.player) #Missle does always exist but is rendered offscreen when not used
+        self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values, None)
+        # self.missile = sprites.Missile("triangle", 0.5, self.config_values, self.player) #Missle does always exist but is rendered offscreen when not used
         # for i in range(self.config_values['enemy_max_no']):
         #     self.spawn_enemy()
 
     def spawn_enemy(self):
         """ Spawns an onject of type enemy """
-        self.enemies.append(sprites.Enemy("circle", 1, self.config_values))
+        self.enemies.append(sprites.Enemy("circle", 1, self.config_values, self.enemies))
         logging.debug("Enemy spawned, now: {}".format(len(self.enemies)))
 
     def despawn_enemy(self, enemy_object):
-        """ Kills an enemy object by removing it's instance it fron the game.enemies list """
+        """ Despawn an enemy object by removing it's instance it fron the game.enemies list """
         enemy_object.despawn()
         self.enemies.remove(enemy_object)
         logging.debug("Enemy despawned, now left: {}".format(len(self.enemies)))
+
+    def despawn_missile(self, missile_object):
+        """ Despawn a missile object by removing it's instance it fron the game.player.missiles list """
+        missile_object.despawn()
+        self.player.missiles_shot.remove(missile_object)
+        logging.debug("Missile despawned, now left: {}".format(len(self.player.missiles_shot)))
 
     def bind_keys(self):
         """ Assign Keyboard Bindings """
@@ -105,7 +111,7 @@ class Game():
         self.pen.screen.onkey(partial(self.player_ctrl, self.player.turn_right), "Right")
         self.pen.screen.onkey(partial(self.player_ctrl, self.player.accelerate), "Up")
         self.pen.screen.onkey(partial(self.player_ctrl, self.player.decelerate), "Down")
-        self.pen.screen.onkey(partial(self.player_ctrl, self.missile.fire), "space")
+        self.pen.screen.onkey(partial(self.player_ctrl, self.player.fire), "space")
         self.pen.screen.onkey(self.confirm, "Return")
         self.pen.screen.onkey(self.cancel, "Escape")
         self.pen.screen.listen()
@@ -162,6 +168,11 @@ class Game():
             enemy.ht()
         self.enemies.clear()
         logging.debug('Deleted all enemies, now left: {}'.format(len(self.enemies)))
+        for missile in self.player.missiles_shot:
+            missile.ht()
+        self.player.missiles_shot.clear()
+        logging.debug('Deleted all players, now left: {}'.format(len(self.player.missiles_shot)))
+
         self.draw_over()
         self._score = 0
         self._lives = self.config_values['player_lives']
@@ -177,13 +188,15 @@ class Game():
         self.player.ht()
         for enemy in self.enemies:
             enemy.ht()
-        self.missile.ht()
+        for missile in self.player.missiles_shot:
+            missile.ht()
 
     def show_sprites(self):
         self.player.st()
         for enemy in self.enemies:
             enemy.st()
-        self.missile.st()
+        for missile in self.player.missiles_shot:
+            missile.st()
 
     def draw_screen(self, title, height, width, text_01 = "", text_02 = "", text_03 = ""):
         """ Template function to draw self screens """

@@ -4,12 +4,12 @@ import turtle
 import logging
 
 class Sprite(turtle.Turtle):
-    def __init__(self, spriteshape, spritesize, color, startx, starty, current_config_values):
+    def __init__(self, spriteshape, spritesize, color, startx, starty, current_config_values, object_tracker):
         turtle.Turtle.__init__(self, shape = spriteshape)
         self._name = 'Sprite'
         self.config_values = current_config_values
+        self._object_tracker = object_tracker
         self.screen.tracer(0)
-        #self.speed(0)
         self.penup()
         self.shapesize(spritesize)
         self.radius = spritesize * 10
@@ -30,6 +30,11 @@ class Sprite(turtle.Turtle):
         """ Return y-Postion of the sprite """
         _ypos = self.ycor()
         return int(_ypos)
+
+    def despawn(self):
+        self.ht()
+        self._object_tracker.remove(self)
+        logging.debug("{} despawned, now left: {}".format(self._name, len(self._object_tracker)))
 
     def move(self):
         """ Sprite movement per frame """
@@ -99,12 +104,23 @@ class Sprite(turtle.Turtle):
         self.setheading(random.randint(0,359))
 
 class Player(Sprite):
-    def __init__(self, spriteshape, spritesize, color, startx, starty, current_config_values):
-        Sprite.__init__(self, spriteshape, spritesize, color, startx, starty, current_config_values)
+    def __init__(self, spriteshape, spritesize, color, startx, starty, current_config_values, object_tracker):
+        Sprite.__init__(self, spriteshape, spritesize, color, startx, starty, current_config_values, object_tracker)
         self._name = 'Player'
         self.speed = self.config_values['player_speed_default']
         self.lives = self.config_values['player_lives']
         self.setheading(0)
+        self.missiles_shot = []
+        self._max_missiles_number = 2 # Todo: make global? 
+
+    def fire(self):
+        if len(self.missiles_shot) < self._max_missiles_number:
+            self.missiles_shot.append(Missile("triangle", 0.5, self.xpos, self.ypos, self.config_values, self, self.missiles_shot))
+            # self.missiles_shot[-1].goto(self.xpos, self.ypos)
+            self.missiles_shot[-1].setheading(self.heading())
+            logging.debug('Missle fired - currently {}/{} flying'.format(len(self.missiles_shot), self._max_missiles_number))
+        else:
+            logging.debug('All missiles already fired - currently:{}/{} flying'.format(len(self.missiles_shot), self._max_missiles_number))
 
     def turn_left(self):
         self.lt(self.config_values['player_turn_rate'])
@@ -118,46 +134,43 @@ class Player(Sprite):
     def decelerate(self):
         self.speed -= 1
 
+class Missile(Sprite):
+    def __init__(self, spriteshape, spritesize, xpos, ypos, current_config_values, player, object_tracker):
+        Sprite.__init__(self, spriteshape, spritesize, 'yellow', xpos, ypos, current_config_values, object_tracker)
+        self._name = 'Missile'
+        #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
+        self.player = player
+        self.speed = self.config_values['missile_speed']
+
+    def move(self):
+        #border check
+        if self.xcor() < -self.config_values['field_width']/2 or self.xcor() > self.config_values['field_width']/2 or \
+        self.ycor() < -self.config_values['field_height']/2 or self.ycor() > self.config_values['field_height']/2 :
+            logging.debug('Missile collided with wall')
+            self.despawn()
+        else:
+            self.fd(self.speed)
+
+    # def fire(self):
+    #     if self.status == "ready":
+    #         self.goto(self.player.xcor(), self.player.ycor())
+    #         self.setheading(self.player.heading())
+    #         self.status = "firing"
+    #         logging.debug('Missle fired')
+
+    # def reset(self):
+    #     if self.status == "firing":
+    #         self.fd(0)
+    #         self.goto(-1000,1000)
+    #         self.status = "ready"
+
+
+
 class Enemy(Sprite):
-    def __init__(self, spriteshape, spritesize, current_config_values):
-        Sprite.__init__(self, spriteshape, spritesize, 'red', random.randint(- current_config_values['field_width']/2, current_config_values['field_width']/2), random.randint(- current_config_values['field_height']/2, current_config_values['field_height']/2), current_config_values)
+    def __init__(self, spriteshape, spritesize, current_config_values, object_tracker):
+        Sprite.__init__(self, spriteshape, spritesize, 'red', random.randint(- current_config_values['field_width']/2, current_config_values['field_width']/2), random.randint(- current_config_values['field_height']/2, current_config_values['field_height']/2), current_config_values, object_tracker)
         self._name = 'Enemy'
         self.speed = self.config_values['enemy_speed']
         self.value = 100
         self.random_heading()
 
-    def despawn(self):
-        """ Death of enemy currently only radomly sets it to a new position """
-        self.ht()
-
-class Missile(Sprite):
-    def __init__(self, spriteshape, spritesize, current_config_values, player):
-        Sprite.__init__(self, spriteshape, spritesize, 'yellow', -1000, -1000, current_config_values)
-        self._name = 'Missile'
-        #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
-        self.player = player
-        self.speed = self.config_values['missile_speed']
-        self.status = "ready"
-
-    def fire(self):
-        if self.status == "ready":
-            self.goto(self.player.xcor(), self.player.ycor())
-            self.setheading(self.player.heading())
-            self.status = "firing"
-            logging.debug('Missle fired')
-
-    def reset(self):
-        if self.status == "firing":
-            self.fd(0)
-            self.goto(-1000,1000)
-            self.status = "ready"
-
-    def move(self):
-        if self.status == "firing":
-            #border check
-            if self.xcor() < -self.config_values['field_width']/2 or self.xcor() > self.config_values['field_width']/2 or \
-            self.ycor() < -self.config_values['field_height']/2 or self.ycor() > self.config_values['field_height']/2 :
-                logging.debug('Missile collided with wall')
-                self.reset()
-            else:
-                self.fd(self.speed)
