@@ -9,7 +9,7 @@ class Sprite(turtle.Turtle):
         self._name = 'Sprite'
         self.config_values = current_config_values
         self.screen.tracer(0)
-        self.speed(0)
+        #self.speed(0)
         self.penup()
         self.shapesize(spritesize)
         self.radius = spritesize * 10
@@ -18,8 +18,21 @@ class Sprite(turtle.Turtle):
         self.goto(startx, starty)
         self.speed = 1
         logging.debug("Instance of class {} created!".format(self.__class__))
+    
+    @property
+    def xpos(self):
+        """ Return x-Postion of the sprite """
+        _xpos = self.xcor()
+        return int(_xpos)
+
+    @property
+    def ypos(self):
+        """ Return y-Postion of the sprite """
+        _ypos = self.ycor()
+        return int(_ypos)
 
     def move(self):
+        """ Sprite movement per frame """
         self.fd(self.speed)
 
         #Boundary detection
@@ -57,14 +70,33 @@ class Sprite(turtle.Turtle):
 
 
     def is_collision(self, other):
-        if (self.xcor() + self.radius >= (other.xcor() - other.radius)) and \
-        (self.xcor() - self.radius <= (other.xcor() + other.radius)) and \
-        (self.ycor() + self.radius >= (other.ycor() - other.radius)) and \
-        (self.ycor() - self.radius <= (other.ycor() + other.radius)):
+        """ Check for collision between self and given sprite <other> """
+        if self.distance(other) <= (self.radius + other.radius):
             logging.debug('Collision of <{0}> with <{1}> detected!'.format(self._name, other._name))
             return True
         else:
             return False
+
+    def distance(self, other):
+        """ Calculate distance between self and given sprite <other> """
+        _distance = math.sqrt(float(((self.xpos) - other.xpos) ** 2 + (self.ypos - other.ypos) ** 2))
+        return _distance
+
+    def random_position(self, other = None):
+        """ Change sprite position to random location """
+        while True:
+            x = random.randint(- int(self.config_values['field_width']) // 2, self.config_values['field_width'] // 2)
+            y = random.randint(- int(self.config_values['field_height']) // 2, self.config_values['field_height'] // 2)
+            if other != None:
+                if self.distance(other) >= (self.radius + other.radius + 30):
+                    break
+            else:
+                break     
+        self.goto(x, y)
+
+    def random_heading(self):
+        """ Change sprite heading to random angle """ 
+        self.setheading(random.randint(0,359))
 
 class Player(Sprite):
     def __init__(self, spriteshape, spritesize, color, startx, starty, current_config_values):
@@ -92,7 +124,11 @@ class Enemy(Sprite):
         self._name = 'Enemy'
         self.speed = self.config_values['enemy_speed']
         self.value = 100
-        self.setheading(random.randint(0,360))
+        
+    def die(self):
+        """ Death of enemy currently only radomly sets it to a new position """
+        self.random_position()
+        self.random_heading()
 
 class Missile(Sprite):
     def __init__(self, spriteshape, spritesize, current_config_values, player):
