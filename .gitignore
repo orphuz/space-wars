@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# local vscode setting
+/.vscode/
+bash.exe.stackdump
