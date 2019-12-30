@@ -5,6 +5,8 @@ import logging
 import time
 import random
 
+from functools import partial
+
 import sprites
 import states
 import game_config
@@ -88,11 +90,16 @@ class Game():
 
     def bind_keys(self):
         """ Assign Keyboard Bindings """
-        self.pen.screen.onkey(self.player.turn_left, "Left")
-        self.pen.screen.onkey(self.player.turn_right, "Right")
-        self.pen.screen.onkey(self.player.accelerate, "Up")
-        self.pen.screen.onkey(self.player.decelerate, "Down")
-        self.pen.screen.onkey(self.missile.fire, "space")
+        # player_ctrl_left = partial(self.player_ctrl, self.player.turn_left)
+        # player_ctrl_right = partial(self.player_ctrl, self.player.turn_right)
+        # player_ctrl_accelerate = partial(self.player_ctrl, self.player.accelerate)
+        # player_ctrl_decelerate = partial(self.player_ctrl, self.player.decelerate)
+        # player_ctrl_fire = partial(self.player_ctrl, self.missile.fire)
+        self.pen.screen.onkey(partial(self.player_ctrl, self.player.turn_left), "Left")
+        self.pen.screen.onkey(partial(self.player_ctrl, self.player.turn_right), "Right")
+        self.pen.screen.onkey(partial(self.player_ctrl, self.player.accelerate), "Up")
+        self.pen.screen.onkey(partial(self.player_ctrl, self.player.decelerate), "Down")
+        self.pen.screen.onkey(partial(self.player_ctrl, self.missile.fire), "space")
         self.pen.screen.onkey(self.confirm, "Return")
         self.pen.screen.onkey(self.cancel, "Escape")
         self.pen.screen.listen()
@@ -104,6 +111,13 @@ class Game():
             logging.debug('self {} - Waiting for player input'.format(self.state.name))
             self.pen.screen.update() # includes the check for key press
             time.sleep(0.1) # Slow down main loop
+
+    def player_ctrl(self, fun):
+        """ Executes game controls only when the game is in state <running> """
+        if self.state == self.running:
+            fun()
+        else:
+            logging.debug("Player controls are only available when game is running (current state: {})".format(self.state.name))
 
     def confirm(self):
         """ Player input to confirm """
