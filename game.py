@@ -64,6 +64,7 @@ class Game():
 
     @state.setter
     def state(self, state_request):
+        """ Check validity of game state and set it """
         if state_request not in STATES:
             logging.error('Requested state <%s> is unknown' % state_request)
             raise ValueError('Requested state <%s> is unknown' % state_request)
@@ -86,7 +87,7 @@ class Game():
             self.enemies.append(sprites.Enemy("circle", 1, self.config_values)) 
 
     def bind_keys(self):
-        # Assign Keyboard Bindings
+        """ Assign Keyboard Bindings """
         self.pen.screen.onkey(self.player.turn_left, "Left")
         self.pen.screen.onkey(self.player.turn_right, "Right")
         self.pen.screen.onkey(self.player.accelerate, "Up")
@@ -98,18 +99,22 @@ class Game():
         logging.debug("Key bindings successfully assigned ")
 
     def wait_for_input(self):
+        """ wait for input of player """
         while self.state == self.welcoming or self.state == self.paused or self.state == self.over:
             logging.debug('self {} - Waiting for player input'.format(self.state.name))
             self.pen.screen.update() # includes the check for key press
             time.sleep(0.1) # Slow down main loop
 
     def confirm(self):
+        """ Player input to confirm """
         eval(self.state.transit("confirm"))
 
     def cancel(self):
+        """ Player input to cancel """
         eval(self.state.transit("cancel"))
 
     def death(self):
+        """ Game input player dies """
         eval(self.state.transit("player_death"))
 
     def welcome(self):
