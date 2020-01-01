@@ -17,8 +17,9 @@ logging.basicConfig(filename = LOG_FILE,
                     filemode = 'w')
 
 game = game.Game("Space Wars")
-   
+
 while game.state != game.exiting:
+
     loop_delta = 1./game.config_values['game_fps'] #calculate loop time based on fixed FPS value
     current_time = target_time = time.perf_counter()
 

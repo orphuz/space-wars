@@ -57,7 +57,7 @@ class Game():
             self.exiting
         )
 
-        self.create_sprites()
+        self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values, None)
         self.bind_keys()
         self.welcome()
  
@@ -79,25 +79,21 @@ class Game():
         """ Load self config from the config file """
         config = game_config.Config()
         logging.debug("self config loaded")
-        return config.current_values
+        return config.current_values        
 
-    def create_sprites(self):
-        """ Create sprites for player, missile and enemies """
-        self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values, None)
-        # self.missile = sprites.Missile("triangle", 0.5, self.config_values, self.player) #Missle does always exist but is rendered offscreen when not used
-        # for i in range(self.config_values['enemy_max_no']):
-        #     self.spawn_enemy()
-
-    def spawn_enemy(self):
+    def spawn_enemy(self, random_pos = True, distance = 200):
         """ Spawns an onject of type enemy """
         self.enemies.append(sprites.Enemy("circle", 1, self.config_values, self.enemies))
+        self.enemies[-1].st()
+        if  random_pos == True:
+            self.enemies[-1].random_position(self.player, distance)
         logging.debug("Enemy spawned, now: {}".format(len(self.enemies)))
 
-    def despawn_enemy(self, enemy_object):
-        """ Despawn an enemy object by removing it's instance it fron the game.enemies list """
-        enemy_object.despawn()
-        self.enemies.remove(enemy_object)
-        logging.debug("Enemy despawned, now left: {}".format(len(self.enemies)))
+    # def despawn_enemy(self, enemy_object):
+    #     """ Despawn an enemy object by removing it's instance it fron the game.enemies list """
+    #     enemy_object.despawn()
+    #     self.enemies.remove(enemy_object)
+    #     logging.debug("Enemy despawned, now left: {}".format(len(self.enemies)))
 
     def despawn_missile(self, missile_object):
         """ Despawn a missile object by removing it's instance it fron the game.player.missiles list """

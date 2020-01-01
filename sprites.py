@@ -31,6 +31,11 @@ class Sprite(turtle.Turtle):
         _ypos = self.ycor()
         return int(_ypos)
 
+    @property
+    def name(self):
+        """ Return y-Postion of the sprite """
+        return self._name
+
     def despawn(self):
         self.ht()
         self._object_tracker.remove(self)
@@ -87,14 +92,17 @@ class Sprite(turtle.Turtle):
         _distance = math.sqrt(float(((self.xpos) - other.xpos) ** 2 + (self.ypos - other.ypos) ** 2))
         return _distance
 
-    def random_position(self, other = None):
+    def random_position(self, other = None, distance = 30):
         """ Change sprite position to random location """
         while True:
             x = random.randint(- int(self.config_values['field_width']) // 2, self.config_values['field_width'] // 2)
             y = random.randint(- int(self.config_values['field_height']) // 2, self.config_values['field_height'] // 2)
             if other != None:
-                if self.distance(other) >= (self.radius + other.radius + 30):
+                if self.distance(other) >= (self.radius + other.radius + distance):
                     break
+                else:
+                    logging.debug('<{}> withtin range of {} - retrying with half distance'.format(other, distance))
+                    distance = distance // 2
             else:
                 break     
         self.goto(x, y)
@@ -111,7 +119,7 @@ class Player(Sprite):
         self.lives = self.config_values['player_lives']
         self.setheading(0)
         self.missiles_shot = []
-        self._max_missiles_number = 2 # Todo: make global? 
+        self._max_missiles_number = 5 # Todo: make global? 
 
     def fire(self):
         if len(self.missiles_shot) < self._max_missiles_number:
