@@ -1,33 +1,9 @@
 import configparser
 import logging
 
-## Default Game preferences
-game_fps = 60
-
-field_width = 600 # max 900
-field_height = 600 # max 700
-
-modifier_lives = 1
-modifier_score = 100
-
-# Sprite Properties
-sprite_radius_default = 15
-
-# Player Properties
-player_lives = 3
-player_speed_default = 2.5
-player_turn_rate = 24
-
-# Enemy Properties
-enemy_speed = 2.5
-enemy_max_no = 7
-
-# Missile Properties
-missile_speed = 10
-
-
 class Config():
     def __init__(self):
+        ''' Managemes the game configuration with an external config file '''
         self._config_file = "config.ini"
         self._DEFAULTVALUES = {
             'game_fps' : 60,
@@ -89,6 +65,7 @@ class Config():
            self.config.write(configfile)
 
     def reset_to_default(self):
+        ''' Write hard coded default vaules to the config file '''
         self.config['Current'] = self._DEFAULTVALUES
         self.write_file()
         logging.warn('_DEFAULTVALUES set and written to file {}'.format(self._config_file))

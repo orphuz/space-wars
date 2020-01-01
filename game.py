@@ -13,7 +13,7 @@ import game_config
 
 class Game():
     def __init__(self, name):
-        """ Main self class """
+        """ Main game class """
         self.name = name
         self.config_values = self.load_config()
         self.enemies = []
@@ -82,18 +82,12 @@ class Game():
         return config.current_values        
 
     def spawn_enemy(self, random_pos = True, distance = 200):
-        """ Spawns an onject of type enemy """
+        """ Spawns an object of type enemy """
         self.enemies.append(sprites.Enemy("circle", 1, self.config_values, self.enemies))
         self.enemies[-1].st()
         if  random_pos == True:
             self.enemies[-1].random_position(self.player, distance)
         logging.debug("Enemy spawned, now: {}".format(len(self.enemies)))
-
-    # def despawn_enemy(self, enemy_object):
-    #     """ Despawn an enemy object by removing it's instance it fron the game.enemies list """
-    #     enemy_object.despawn()
-    #     self.enemies.remove(enemy_object)
-    #     logging.debug("Enemy despawned, now left: {}".format(len(self.enemies)))
 
     def despawn_missile(self, missile_object):
         """ Despawn a missile object by removing it's instance it fron the game.player.missiles list """
@@ -149,7 +143,7 @@ class Game():
         self.state = self.welcoming
 
     def run(self):
-        """ Draw all self elements and run the self """
+        """ Draws all game elements and runs the game """
         self.draw_field()
         self.draw_score()
         self.state = self.running
