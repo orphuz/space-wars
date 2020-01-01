@@ -20,6 +20,7 @@ class Game():
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
+        self.loop_delta = 1./self.config_values['game_fps'] #calculate loop time based on fixed FPS value
         self.pen = turtle.Turtle(visible = False)
         self.pen.screen.tracer(0)
         self.pen.color('white')
@@ -59,7 +60,8 @@ class Game():
 
         self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values, None)
         self.bind_keys()
-        self.welcome()
+        self.state = self.welcoming
+        self.mainloop()
  
     @property
     def state(self):
@@ -74,6 +76,26 @@ class Game():
         self._state = state_request
         #print('Set self.state = {}'.format(self.state.name))
         logging.debug('Set self.state = {}'.format(self.state.name))
+
+    def mainloop(self):
+        """ Main loop to check game state and trigger actions """
+        while self.state != self.exiting:
+
+            if self.state == self.welcoming:
+                self.welcome()
+            
+            if self.state == self.paused:
+                self.pause()
+
+            if self.state == self.over:
+                self.dead()
+
+            if self.state == self.exit:
+                self.exit()
+
+            self.pen.screen.update() # includes the check for key press
+            
+            time.sleep(0.1) # Slow down main loop
 
     def load_config(self):
         """ Load self config from the config file """
@@ -141,16 +163,63 @@ class Game():
             self.spawn_enemy()
         self.draw_welcome()
         self.state = self.welcoming
+        while self.state == self.welcoming:
+            self.wait_for_input()
 
     def run(self):
         """ Draws all game elements and runs the game """
         self.draw_field()
         self.draw_score()
         self.state = self.running
+
+        current_time = target_time = time.perf_counter()
+
+        while self.state == self.running:
+                #logging.debug("Start of self loop with self.state = %s" % self.state)
+                self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
+                # time_delta = current_time - previous_time
+
+                self.pen.screen.update()
+
+                self.player.move()
+
+                for enemy in self.enemies:
+                    enemy.move()
+
+                for missile in self.player.missiles_shot:
+                    missile.move()
+
+                for enemy in self.enemies:
+                    #Check for collision with enemies
+                    if self.player.is_collision(enemy):
+                        enemy.despawn()
+                        self.spawn_enemy()
+                        self.update_score(-1, 0) #remove 1 live
+
+                    for missile in self.player.missiles_shot:
+                        # Check for collision with all missles shot
+                        if missile.is_collision(enemy):
+                            enemy.despawn()
+                            missile.despawn()
+                            self.spawn_enemy()
+                            self.spawn_enemy()
+                            self.update_score(0, enemy.value) #add 10 to score                 
+            
+                #### sleep management to achieve constant FPS
+                target_time += self.loop_delta
+                sleep_time = target_time - time.perf_counter()
+                if sleep_time > 0:
+                    # logging.debug("Sleeping for: {}".format(sleep_time))
+                    time.sleep(sleep_time)
+                else:
+                    print("Execution of main loop took too long: {}".format(sleep_time))
+                    logging.warning("Execution of main loop took too long: {}".format(sleep_time))
         
     def pause(self):
         self.draw_pause()
         self.state = self.paused
+        while self.state == self.paused:
+            self.wait_for_input()
     
     def dead(self):
         self.state = self.over
@@ -166,6 +235,9 @@ class Game():
         self.draw_over()
         self._score = 0
         self._lives = self.config_values['player_lives']
+
+        while self.state == self.paused:
+            self.wait_for_input()
 
     def exit(self):
         """ Close turtle panel and exit the self application """
