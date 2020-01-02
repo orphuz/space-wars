@@ -58,7 +58,7 @@ class Game():
             self.exiting
         )
 
-        self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values, None)
+        self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values)
         self.bind_keys()
         self.state = self.welcoming
         self.mainloop()
@@ -103,19 +103,19 @@ class Game():
         logging.debug("self config loaded")
         return config.current_values        
 
-    def spawn_enemy(self, random_pos = True, distance = 200):
-        """ Spawns an object of type enemy """
-        self.enemies.append(sprites.Enemy("circle", 1, self.config_values, self.enemies))
-        self.enemies[-1].st()
-        if  random_pos == True:
-            self.enemies[-1].random_position(self.player, distance)
-        logging.debug("Enemy spawned, now: {}".format(len(self.enemies)))
+    # def spawn_enemy(self, random_pos = True, distance = 200):
+    #     """ Spawns an object of type enemy """
+    #     self.enemies.append(sprites.Enemy("circle", 1, self.config_values, self.enemies))
+    #     self.enemies[-1].st()
+    #     if  random_pos == True:
+    #         self.enemies[-1].random_position(self.player, distance)
+    #     logging.debug("Enemy spawned, now: {}".format(len(self.enemies)))
 
-    def despawn_missile(self, missile_object):
-        """ Despawn a missile object by removing it's instance it fron the game.player.missiles list """
-        missile_object.despawn()
-        self.player.missiles_shot.remove(missile_object)
-        logging.debug("Missile despawned, now left: {}".format(len(self.player.missiles_shot)))
+    # def despawn_missile(self, missile_object):
+    #     """ Despawn a missile object by removing it's instance it fron the game.player.missiles list """
+    #     missile_object.despawn()
+    #     self.player.missiles_shot.remove(missile_object)
+    #     logging.debug("Missile despawned, now left: {}".format(len(self.player.missiles_shot)))
 
     def bind_keys(self):
         """ Assign Keyboard Bindings """
@@ -159,8 +159,8 @@ class Game():
     def welcome(self):
         """ Welcome screen aka Intro """
         self.enemies.clear()
-        for i in range(self.config_values['enemy_max_no']):
-            self.spawn_enemy()
+        for _ in range(self.config_values['enemy_max_no']):
+            sprites.Enemy.spawn()
         self.draw_welcome()
         self.state = self.welcoming
         while self.state == self.welcoming:
@@ -186,7 +186,7 @@ class Game():
                 for enemy in self.enemies:
                     enemy.move()
 
-                for missile in self.player.missiles_shot:
+                for missile in sprites.Missile.instances:
                     missile.move()
 
                 for enemy in self.enemies:
@@ -196,11 +196,11 @@ class Game():
                         self.spawn_enemy()
                         self.update_score(-1, 0) #remove 1 live
 
-                    for missile in self.player.missiles_shot:
+                    for missile in sprites.Missile.instances:
                         # Check for collision with all missles shot
                         if missile.is_collision(enemy):
                             enemy.despawn()
-                            missile.despawn()
+                            missile.despawn(missile)
                             self.spawn_enemy()
                             self.spawn_enemy()
                             self.update_score(0, enemy.value) #add 10 to score                 
@@ -250,14 +250,14 @@ class Game():
         self.player.ht()
         for enemy in self.enemies:
             enemy.ht()
-        for missile in self.player.missiles_shot:
+        for missile in sprites.Missile.instances:
             missile.ht()
 
     def show_sprites(self):
         self.player.st()
         for enemy in self.enemies:
             enemy.st()
-        for missile in self.player.missiles_shot:
+        for missile in sprites.Missile.instances:
             missile.st()
 
     def draw_screen(self, title, height, width, text_01 = "", text_02 = "", text_03 = ""):
