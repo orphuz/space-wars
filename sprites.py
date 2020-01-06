@@ -149,6 +149,9 @@ class Player(Sprite):
 class Missile(Sprite):
     """ Missile Sprite """
 
+    instances = []
+    max_number = 2
+
     def __init__(self, spriteshape, spritesize, xpos, ypos, current_config_values, player):
         Sprite.__init__(self, spriteshape, spritesize, 'yellow', xpos, ypos, current_config_values)
         #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
@@ -175,6 +178,7 @@ class Missile(Sprite):
 
 class Enemy(Sprite):
     """ Enemy sprite """
+    instance = []
     max_number = 30
 
     def __init__(self, spriteshape, spritesize, current_config_values):

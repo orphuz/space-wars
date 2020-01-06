@@ -16,7 +16,7 @@ class Game():
         """ Main game class """
         self.name = name
         self.config_values = self.load_config()
-        self.enemies = []
+        # self.enemies = []
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
@@ -105,7 +105,8 @@ class Game():
 
     # def spawn_enemy(self, random_pos = True, distance = 200):
     #     """ Spawns an object of type enemy """
-    #     self.enemies.append(sprites.Enemy("circle", 1, self.config_values, self.enemies))
+    #     
+    # es.append(sprites.Enemy("circle", 1, self.config_values, self.enemies))
     #     self.enemies[-1].st()
     #     if  random_pos == True:
     #         self.enemies[-1].random_position(self.player, distance)
@@ -158,9 +159,9 @@ class Game():
 
     def welcome(self):
         """ Welcome screen aka Intro """
-        self.enemies.clear()
+        sprites.Enemy.instances.clear()
         for _ in range(self.config_values['enemy_max_no']):
-            sprites.Enemy.spawn()
+            sprites.Enemy.spawn(self.player)
         self.draw_welcome()
         self.state = self.welcoming
         while self.state == self.welcoming:
@@ -183,26 +184,26 @@ class Game():
 
                 self.player.move()
 
-                for enemy in self.enemies:
+                for enemy in sprites.Enemy.instances:
                     enemy.move()
 
                 for missile in sprites.Missile.instances:
                     missile.move()
 
-                for enemy in self.enemies:
+                for enemy in sprites.Enemy.instances:
                     #Check for collision with enemies
                     if self.player.is_collision(enemy):
-                        enemy.despawn()
-                        self.spawn_enemy()
+                        enemy.despawn(enemy)
+                        sprites.Enemy.spawn(self.player)
                         self.update_score(-1, 0) #remove 1 live
 
                     for missile in sprites.Missile.instances:
                         # Check for collision with all missles shot
                         if missile.is_collision(enemy):
-                            enemy.despawn()
+                            enemy.despawn(enemy)
                             missile.despawn(missile)
-                            self.spawn_enemy()
-                            self.spawn_enemy()
+                            sprites.Enemy.spawn(self.player)
+                            sprites.Enemy.spawn(self.player)
                             self.update_score(0, enemy.value) #add 10 to score                 
             
                 #### sleep management to achieve constant FPS
@@ -223,10 +224,10 @@ class Game():
     
     def dead(self):
         self.state = self.over
-        for enemy in self.enemies:
+        for enemy in sprites.Enemy.instances:
             enemy.ht()
-        self.enemies.clear()
-        logging.debug('Deleted all enemies, now left: {}'.format(len(self.enemies)))
+        sprites.Enemy.instances.clear()
+        logging.debug('Deleted all enemies, now left: {}'.format(len(sprites.Enemy.instances)))
         for missile in self.player.missiles_shot:
             missile.ht()
         self.player.missiles_shot.clear()
@@ -248,14 +249,14 @@ class Game():
 
     def hide_sprites(self):
         self.player.ht()
-        for enemy in self.enemies:
+        for enemy in sprites.Enemy.instances:
             enemy.ht()
         for missile in sprites.Missile.instances:
             missile.ht()
 
     def show_sprites(self):
         self.player.st()
-        for enemy in self.enemies:
+        for enemy in sprites.Enemy.instances:
             enemy.st()
         for missile in sprites.Missile.instances:
             missile.st()
