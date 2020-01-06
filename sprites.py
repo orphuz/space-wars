@@ -8,19 +8,17 @@ class Sprite(turtle.Turtle):
     instances = []
     max_number = 3
 
-    def __init__(self, spriteshape, spritesize, color, startx, starty, config_values):
+    def __init__(self, game, name, spriteshape, spritesize, color):
         turtle.Turtle.__init__(self)
-        self._name = 'Sprite'
-        self.config_values = config_values
-        self.screen.tracer(0)
-        self.penup()
+        self.game = game
+        self._name = name
         self.shape(spriteshape)
         self.shapesize(spritesize)
-        self.radius = spritesize * 10
         self.color(color)
-        self.fd(0)
-        self.goto(startx, starty)
-        self.speed = 1
+        self.config_values = game.config_values
+        self.screen.tracer(0)
+        self.penup()
+        self.radius = spritesize * 10
         logging.debug("Instance of class {} created!".format(self.__class__))
 
     @property
@@ -40,18 +38,16 @@ class Sprite(turtle.Turtle):
         """ Return y-Postion of the sprite """
         return self._name
 
-    #@classmethod
     def despawn(self):
         self.ht()
         self.instances.remove(self)
 
-    # def despawn(self):
-    #     self.ht()
-    #     self._object_tracker.remove(self)
-    #     logging.debug("{} despawned, now left: {}".format(self._name, len(self._object_tracker)))
-
     def move(self):
-        """ Sprite movement per frame checks for boundary collision and chances postion and heading if necessary """
+        """ 
+        Sprite movement per frame:
+        - check for boundary collision
+        - change postion and heading if necessary
+        """
         self.fd(self.speed)
 
         #Boundary detection
@@ -105,6 +101,7 @@ class Sprite(turtle.Turtle):
         while True:
             x = random.randint(- int(self.config_values['field_width']) // 2, self.config_values['field_width'] // 2)
             y = random.randint(- int(self.config_values['field_height']) // 2, self.config_values['field_height'] // 2)
+            self.goto(x, y)
             if other != None:
                 if self.distance(other) >= (self.radius + other.radius + distance):
                     break
@@ -112,8 +109,7 @@ class Sprite(turtle.Turtle):
                     logging.debug('<{}> withtin range of {} - retrying with half distance'.format(other, distance))
                     distance = distance // 2
             else:
-                break     
-        self.goto(x, y)
+                break
 
     def random_heading(self):
         """ Change sprite heading to random angle """ 
@@ -121,14 +117,16 @@ class Sprite(turtle.Turtle):
 
 class Player(Sprite):
     """ Player Sprite """
-    def __init__(self, spriteshape, spritesize, color, startx, starty, current_config_values):
-        Sprite.__init__(self, spriteshape, spritesize, color, startx, starty, current_config_values)
-        self._name = 'Player'
+    def __init__(self, game):
+        Sprite.__init__(self, game, 'Player', 'triangle', 1, 'white')
+        #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
+        self.setpos(0,0)
+        self.random_heading()
         self.speed = self.config_values['player_speed_default']
         self.lives = self.config_values['player_lives']
-        self.setheading(0)
-        self.missiles_shot = []
-        self._max_missiles_number = 5 # Todo: make global? 
+
+        # self.missiles_shot = []
+        # self.max_missiles_number = 5 # Todo: make global? 
 
     def turn_left(self):
         self.lt(self.config_values['player_turn_rate'])
@@ -143,9 +141,8 @@ class Player(Sprite):
         self.speed -= 1
 
     def fire(self):       
-        Missile.spawn(self)
-        #logging.debug('Missle fired - currently {}/{} flying'.format(len(self.missiles_shot), self._max_missiles_number))
-        
+        Missile.spawn(self.game, self)
+
 
 class Missile(Sprite):
     """ Missile Sprite """
@@ -153,25 +150,25 @@ class Missile(Sprite):
     instances = []
     max_number = 2
 
-    def __init__(self, spriteshape, spritesize, xpos, ypos, current_config_values, player):
-        Sprite.__init__(self, spriteshape, spritesize, 'yellow', xpos, ypos, current_config_values)
+    def __init__(self, game, player):
+        Sprite.__init__(self, game, 'Missile', 'triangle', 0.5, 'yellow')
         #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
-        self.player = player
-        self.speed = self.config_values['missile_speed']
+        self.setpos(player.xpos, player.ypos)
         self.setheading(player.heading())
+        self.speed = self.config_values['missile_speed']
 
     @classmethod
-    def spawn(cls, player):
+    def spawn(cls, game, player):
         if len(cls.instances) < cls.max_number:
-            cls.instances.append(cls("triangle", 0.5, player.xpos, player.ypos, player.config_values, player))
+            cls.instances.append(cls(game, player))
             logging.debug('Missile fired - currently:{}/{} flying'.format(len(cls.instances), cls.max_number))
         else:
             logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(cls.instances), cls.max_number))
 
     def move(self):
         ''' Check for borders and distroies missele, otherwise moves '''
-        if self.xcor() < -self.config_values['field_width']/2 or self.xcor() > self.config_values['field_width']/2 or \
-        self.ycor() < -self.config_values['field_height']/2 or self.ycor() > self.config_values['field_height']/2 :
+        if self.xcor() < - self.config_values['field_width']/2 or self.xcor() > self.config_values['field_width']/2 or \
+        self.ycor() < - self.config_values['field_height']/2 or self.ycor() > self.config_values['field_height']/2 :
             logging.debug('Missile collided with wall')
             Missile.despawn(self)
         else:
@@ -182,25 +179,22 @@ class Enemy(Sprite):
     instance = []
     max_number = 30
 
-    def __init__(self, spriteshape, spritesize, current_config_values):
-        Sprite.__init__(self, spriteshape, spritesize, 'red', random.randint(- current_config_values['field_width']/2, current_config_values['field_width']/2), random.randint(- current_config_values['field_height']/2, current_config_values['field_height']/2), current_config_values)
-        self._name = 'Enemy'
+    def __init__(self, game):
+        Sprite.__init__(self, game, 'Enemy', 'circle', 1, 'red')
         self.speed = self.config_values['enemy_speed']
-        self.value = 100
         self.random_heading()
+        self._value = 100
     
     @classmethod
-    #     self.enemies.append(sprites.Enemy("circle", 1, self.config_values, self.enemies))
-    #     self.enemies[-1].st()
-    #     if  random_pos == True:
-    #         self.enemies[-1].random_position(self.player, distance)
-    #     logging.debug("Enemy spawned, now: {}".format(len(self.enemies)))
-    def spawn(cls, player, distance = 200):
+    def spawn(cls, game, distance = 200):
         """ Spawns an object of type enemy """
         if len(cls.instances) < cls.max_number:
-            cls.instances.append(cls("circle", 1, player.config_values))
-            cls.instances[-1].random_position(player, distance)
+            cls.instances.append(cls(game))
+            cls.instances[-1].random_position(game.player, distance)
             logging.debug('Enemy spawned - currently:{}/{} existing'.format(len(cls.instances), cls.max_number))
         else:
             logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(cls.instances), cls.max_number))
 
+    @property
+    def value(self):
+        return self._value

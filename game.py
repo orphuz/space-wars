@@ -61,7 +61,7 @@ class Game():
             self.exiting
         )
 
-        self.player = Player("triangle", 1, "white", 0, 0, self.config_values)
+        self.player = Player(self)
         self.bind_keys()
         self.state = self.welcoming
         self.mainloop()
@@ -149,7 +149,7 @@ class Game():
         """ Welcome screen aka Intro """
         Enemy.instances.clear()
         for _ in range(self.config_values['enemy_max_no']):
-            Enemy.spawn(self.player)
+            Enemy.spawn(self)
         self.hide_sprites()
         self.draw_welcome()
         self.state = self.welcoming
@@ -184,7 +184,7 @@ class Game():
                     #Check for collision with enemies
                     if self.player.is_collision(enemy):
                         enemy.despawn()
-                        Enemy.spawn(self.player)
+                        Enemy.spawn(self)
                         self.update_score(-1, 0) #remove 1 live
 
                     for missile in Missile.instances:
@@ -192,8 +192,8 @@ class Game():
                         if missile.is_collision(enemy):
                             enemy.despawn()
                             missile.despawn()
-                            Enemy.spawn(self.player)
-                            Enemy.spawn(self.player)
+                            Enemy.spawn(self)
+                            Enemy.spawn(self)
                             self.update_score(0, enemy.value) #add 10 to score                 
             
                 #### sleep management to achieve constant FPS
