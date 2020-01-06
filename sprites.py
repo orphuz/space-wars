@@ -8,12 +8,13 @@ class Sprite(turtle.Turtle):
     instances = []
     max_number = 3
 
-    def __init__(self, spriteshape, spritesize, color, startx, starty, current_config_values):
-        turtle.Turtle.__init__(self, shape = spriteshape)
+    def __init__(self, spriteshape, spritesize, color, startx, starty, config_values):
+        turtle.Turtle.__init__(self)
         self._name = 'Sprite'
-        self.config_values = current_config_values
+        self.config_values = config_values
         self.screen.tracer(0)
         self.penup()
+        self.shape(spriteshape)
         self.shapesize(spritesize)
         self.radius = spritesize * 10
         self.color(color)
@@ -39,10 +40,10 @@ class Sprite(turtle.Turtle):
         """ Return y-Postion of the sprite """
         return self._name
 
-    @classmethod
-    def despawn(cls, this_sprite):
-        this_sprite.ht()
-        cls.instances.remove(this_sprite)
+    #@classmethod
+    def despawn(self):
+        self.ht()
+        self.instances.remove(self)
 
     # def despawn(self):
     #     self.ht()

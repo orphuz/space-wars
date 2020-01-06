@@ -7,7 +7,10 @@ import random
 
 from functools import partial
 
-import sprites
+from sprites import Player
+from sprites import Enemy
+from sprites import Missile
+
 import states
 import game_config
 
@@ -58,7 +61,7 @@ class Game():
             self.exiting
         )
 
-        self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values)
+        self.player = Player("triangle", 1, "white", 0, 0, self.config_values)
         self.bind_keys()
         self.state = self.welcoming
         self.mainloop()
@@ -103,21 +106,6 @@ class Game():
         logging.debug("self config loaded")
         return config.current_values        
 
-    # def spawn_enemy(self, random_pos = True, distance = 200):
-    #     """ Spawns an object of type enemy """
-    #     
-    # es.append(sprites.Enemy("circle", 1, self.config_values, self.enemies))
-    #     self.enemies[-1].st()
-    #     if  random_pos == True:
-    #         self.enemies[-1].random_position(self.player, distance)
-    #     logging.debug("Enemy spawned, now: {}".format(len(self.enemies)))
-
-    # def despawn_missile(self, missile_object):
-    #     """ Despawn a missile object by removing it's instance it fron the game.player.missiles list """
-    #     missile_object.despawn()
-    #     self.player.missiles_shot.remove(missile_object)
-    #     logging.debug("Missile despawned, now left: {}".format(len(self.player.missiles_shot)))
-
     def bind_keys(self):
         """ Assign Keyboard Bindings """
         self.pen.screen.onkey(partial(self.player_ctrl, self.player.turn_left), "Left")
@@ -159,9 +147,10 @@ class Game():
 
     def welcome(self):
         """ Welcome screen aka Intro """
-        sprites.Enemy.instances.clear()
+        Enemy.instances.clear()
         for _ in range(self.config_values['enemy_max_no']):
-            sprites.Enemy.spawn(self.player)
+            Enemy.spawn(self.player)
+        self.hide_sprites()
         self.draw_welcome()
         self.state = self.welcoming
         while self.state == self.welcoming:
@@ -169,6 +158,7 @@ class Game():
 
     def run(self):
         """ Draws all game elements and runs the game """
+        self.show_sprites()
         self.draw_field()
         self.draw_score()
         self.state = self.running
@@ -184,26 +174,26 @@ class Game():
 
                 self.player.move()
 
-                for enemy in sprites.Enemy.instances:
+                for enemy in Enemy.instances:
                     enemy.move()
 
-                for missile in sprites.Missile.instances:
+                for missile in Missile.instances:
                     missile.move()
 
-                for enemy in sprites.Enemy.instances:
+                for enemy in Enemy.instances:
                     #Check for collision with enemies
                     if self.player.is_collision(enemy):
-                        enemy.despawn(enemy)
-                        sprites.Enemy.spawn(self.player)
+                        enemy.despawn()
+                        Enemy.spawn(self.player)
                         self.update_score(-1, 0) #remove 1 live
 
-                    for missile in sprites.Missile.instances:
+                    for missile in Missile.instances:
                         # Check for collision with all missles shot
                         if missile.is_collision(enemy):
-                            enemy.despawn(enemy)
-                            missile.despawn(missile)
-                            sprites.Enemy.spawn(self.player)
-                            sprites.Enemy.spawn(self.player)
+                            enemy.despawn()
+                            missile.despawn()
+                            Enemy.spawn(self.player)
+                            Enemy.spawn(self.player)
                             self.update_score(0, enemy.value) #add 10 to score                 
             
                 #### sleep management to achieve constant FPS
@@ -217,6 +207,7 @@ class Game():
                     logging.warning("Execution of main loop took too long: {}".format(sleep_time))
         
     def pause(self):
+        self.hide_sprites()
         self.draw_pause()
         self.state = self.paused
         while self.state == self.paused:
@@ -224,12 +215,12 @@ class Game():
     
     def dead(self):
         self.state = self.over
-        for enemy in sprites.Enemy.instances:
-            enemy.ht()
-        sprites.Enemy.instances.clear()
-        logging.debug('Deleted all enemies, now left: {}'.format(len(sprites.Enemy.instances)))
-        for missile in self.player.missiles_shot:
-            missile.ht()
+        self.hide_sprites()
+        for enemy in Enemy.instances:
+            enemy.despawn()
+        for enemy in Missile.instances:
+            enemy.despawn()
+        logging.debug('Deleted all enemies, now left: {}'.format(len(Enemy.instances)))
         self.player.missiles_shot.clear()
         logging.debug('Deleted all players, now left: {}'.format(len(self.player.missiles_shot)))
 
@@ -249,21 +240,20 @@ class Game():
 
     def hide_sprites(self):
         self.player.ht()
-        for enemy in sprites.Enemy.instances:
+        for enemy in Enemy.instances:
             enemy.ht()
-        for missile in sprites.Missile.instances:
+        for missile in Missile.instances:
             missile.ht()
 
     def show_sprites(self):
         self.player.st()
-        for enemy in sprites.Enemy.instances:
+        for enemy in Enemy.instances:
             enemy.st()
-        for missile in sprites.Missile.instances:
+        for missile in Missile.instances:
             missile.st()
 
     def draw_screen(self, title, height, width, text_01 = "", text_02 = "", text_03 = ""):
         """ Template function to draw self screens """
-        self.hide_sprites()
         self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
@@ -301,7 +291,6 @@ class Game():
 
     def draw_field(self):
         """ Draw border of the game field """
-        self.show_sprites()
         self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
