@@ -19,7 +19,6 @@ class Game():
         """ Main game class """
         self.name = name
         self.config_values = self.load_config()
-        # self.enemies = []
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
@@ -32,28 +31,21 @@ class Game():
         self._t_score = turtle.Turtle(visible = False)
         self._t_score.color('white')
         self._t_score.penup()
-        logging.debug("Instance of class {} created!".format(self.__class__))
 
-        self.welcoming = states.State("welcoming", {
-            "confirm": "self.run()",
-            "cancel": "self.exit()"
-        })
-        self.running = states.State("running", {
-            "cancel": "self.pause()",
-            "player_death": "self.dead()"
-        })
-        self.paused = states.State("paused", {
-            "confirm": "self.run()",
-            "cancel": "self.dead()"
-        })
-        self.over = states.State("over", {
-            "confirm": "self.welcome()",
-            "cancel": "self.exit()"
-        })
-        self.exiting = states.State("exiting", {"cancel": "self.exit()"}) # Hack
-        
-        global STATES
-        STATES = (
+        self.players_tracker = []
+        self.player = None
+
+        self.enemies_tracker = []
+        self.enemies_max_number = 30
+        self.enemies_initial_number = 3
+
+        self.welcoming = states.Welcoming(self)
+        self.running = states.Running(self)   
+        self.paused = states.Paused(self)
+        self.over = states.Over(self)
+        self.exiting = states.Exit(self)
+       
+        self.STATES = (
             self.welcoming, 
             self.running,
             self.paused,
@@ -61,44 +53,28 @@ class Game():
             self.exiting
         )
 
-        self.player = Player(self)
-        self.bind_keys()
         self.state = self.welcoming
-        self.mainloop()
- 
-    @property
-    def state(self):
-        return self._state
 
-    @state.setter
-    def state(self, state_request):
+        self.bind_keys()
+
+        self.set_state(self.state)
+
+    @property
+    def all_sprites(self):
+        all_sprite_objects = self.players_tracker + self.enemies_tracker
+        for this_player in self.players_tracker:
+            all_sprite_objects += this_player.missiles_shot
+        return all_sprite_objects
+ 
+    def set_state(self, state_request):
         """ Check validity of game state and set it """
-        if state_request not in STATES:
+        if state_request not in self.STATES:
             logging.error('Requested state <%s> is unknown' % state_request)
             raise ValueError('Requested state <%s> is unknown' % state_request)
-        self._state = state_request
+        self.state = state_request
         #print('Set self.state = {}'.format(self.state.name))
-        logging.debug('Set self.state = {}'.format(self.state.name))
-
-    def mainloop(self):
-        """ Main loop to check game state and trigger actions """
-        while self.state != self.exiting:
-
-            if self.state == self.welcoming:
-                self.welcome()
-            
-            if self.state == self.paused:
-                self.pause()
-
-            if self.state == self.over:
-                self.dead()
-
-            if self.state == self.exit:
-                self.exit()
-
-            self.pen.screen.update() # includes the check for key press
-            
-            time.sleep(0.1) # Slow down main loop
+        logging.debug('Set game.state = {}'.format(self.state.name))
+        self.state.preperation()
 
     def load_config(self):
         """ Load self config from the config file """
@@ -108,61 +84,37 @@ class Game():
 
     def bind_keys(self):
         """ Assign Keyboard Bindings """
-        self.pen.screen.onkey(partial(self.player_ctrl, self.player.turn_left), "Left")
-        self.pen.screen.onkey(partial(self.player_ctrl, self.player.turn_right), "Right")
-        self.pen.screen.onkey(partial(self.player_ctrl, self.player.accelerate), "Up")
-        self.pen.screen.onkey(partial(self.player_ctrl, self.player.decelerate), "Down")
-        self.pen.screen.onkey(partial(self.player_ctrl, self.player.fire), "space")
-        self.pen.screen.onkey(self.confirm, "Return")
-        self.pen.screen.onkey(self.cancel, "Escape")
+        input_left = partial(self.player_input, 'left')
+        self.pen.screen.onkey(input_left, "Left")
+        input_right = partial(self.player_input, 'right')
+        self.pen.screen.onkey(input_right, "Right")
+        input_up = partial(self.player_input, 'up')
+        self.pen.screen.onkey(input_up, "Up")
+        input_down = partial(self.player_input, 'down')
+        self.pen.screen.onkey(input_down, "Down")
+        input_fire = partial(self.player_input, 'fire')
+        self.pen.screen.onkey(input_fire, "space")
+        input_return = partial(self.player_input, "confirm")
+        self.pen.screen.onkey(input_return, "Return")
+        input_esc = partial(self.player_input, "cancel")
+        self.pen.screen.onkey(input_esc, "Escape")
         self.pen.screen.listen()
         logging.debug("Key bindings successfully assigned ")
 
-    def wait_for_input(self):
+    def player_input(self, input):
+        """ Request the initially key binded input at the currents state transition function """
+        logging.debug('Player input: {}'.format(input))
+        self.state.transit(input)        
+
+    def wait_for_input(self, state):
         """ wait for input of player """
-        while self.state == self.welcoming or self.state == self.paused or self.state == self.over:
+        while self.state == state:
             logging.debug('self {} - Waiting for player input'.format(self.state.name))
             self.pen.screen.update() # includes the check for key press
             time.sleep(0.1) # Slow down main loop
 
-    def player_ctrl(self, fun):
-        """ Executes game controls only when the game is in state <running> """
-        if self.state == self.running:
-            fun()
-        else:
-            logging.debug("Player controls are only available when game is running (current state: {})".format(self.state.name))
-
-    def confirm(self):
-        """ Player input to confirm """
-        exec_function = self.state.transit("confirm")
-        eval(exec_function)
-
-    def cancel(self):
-        """ Player input to cancel """
-        eval(self.state.transit("cancel"))
-
-    def death(self):
-        """ Game input player dies """
-        eval(self.state.transit("player_death"))
-
-    def welcome(self):
-        """ Welcome screen aka Intro """
-        Enemy.instances.clear()
-        for _ in range(self.config_values['enemy_max_no']):
-            Enemy.spawn(self)
-        self.hide_sprites()
-        self.draw_welcome()
-        self.state = self.welcoming
-        while self.state == self.welcoming:
-            self.wait_for_input()
-
-    def run(self):
-        """ Draws all game elements and runs the game """
-        self.show_sprites()
-        self.draw_field()
-        self.draw_score()
-        self.state = self.running
-
+    def main_loop(self):
+        """ Run the main game """
         current_time = target_time = time.perf_counter()
 
         while self.state == self.running:
@@ -172,29 +124,24 @@ class Game():
 
                 self.pen.screen.update()
 
-                self.player.move()
+                for sprite in self.all_sprites:
+                    sprite.move()
 
-                for enemy in Enemy.instances:
-                    enemy.move()
-
-                for missile in Missile.instances:
-                    missile.move()
-
-                for enemy in Enemy.instances:
+                for enemy in self.enemies_tracker:
                     #Check for collision with enemies
                     if self.player.is_collision(enemy):
+                        self.update_score(-1, 0) #remove 1 live
                         enemy.despawn()
                         Enemy.spawn(self)
-                        self.update_score(-1, 0) #remove 1 live
 
-                    for missile in Missile.instances:
+                    for missile in self.player.missiles_shot:
                         # Check for collision with all missles shot
                         if missile.is_collision(enemy):
+                            self.update_score(0, enemy.value) #add 10 to scor
                             enemy.despawn()
                             missile.despawn()
                             Enemy.spawn(self)
-                            Enemy.spawn(self)
-                            self.update_score(0, enemy.value) #add 10 to score                 
+                            Enemy.spawn(self)             
             
                 #### sleep management to achieve constant FPS
                 target_time += self.loop_delta
@@ -206,51 +153,35 @@ class Game():
                     print("Execution of main loop took too long: {}".format(sleep_time))
                     logging.warning("Execution of main loop took too long: {}".format(sleep_time))
         
-    def pause(self):
+   
+    def spawn_all_sprites(self):
+        self.player = Player.spawn(self) 
+        for _ in range(self.enemies_initial_number):
+            Enemy.spawn(self)
+        logging.debug('All enemies spawned')
+
+    def despawn_all_sprites(self):
+        """ Hides and resets all sprites in the game """
         self.hide_sprites()
-        self.draw_pause()
-        self.state = self.paused
-        while self.state == self.paused:
-            self.wait_for_input()
-    
-    def dead(self):
-        self.state = self.over
-        self.hide_sprites()
-        for enemy in Enemy.instances:
-            enemy.despawn()
-        for enemy in Missile.instances:
-            enemy.despawn()
-        logging.debug('Deleted all enemies, now left: {}'.format(len(Enemy.instances)))
+
+        for sprite in self.all_sprites:
+            sprite.despawn()
+        self.players_tracker.clear()
+        self.enemies_tracker.clear()
         self.player.missiles_shot.clear()
-        logging.debug('Deleted all players, now left: {}'.format(len(self.player.missiles_shot)))
-
-        self.draw_over()
-        self._score = 0
-        self._lives = self.config_values['player_lives']
-
-        while self.state == self.paused:
-            self.wait_for_input()
-
-    def exit(self):
-        """ Close turtle panel and exit the self application """
-        self.state = self.exiting
-        logging.warn("Exiting python program via turtle")
-        self.pen.screen.bye
-        sys.exit()
+        logging.debug('All sprites despawned')
 
     def hide_sprites(self):
-        self.player.ht()
-        for enemy in Enemy.instances:
-            enemy.ht()
-        for missile in Missile.instances:
-            missile.ht()
+        """ Hides all spirtes in the game """
+        for sprite in self.all_sprites:
+            sprite.ht()
+        logging.debug('All sprites hidden')
 
     def show_sprites(self):
-        self.player.st()
-        for enemy in Enemy.instances:
-            enemy.st()
-        for missile in Missile.instances:
-            missile.st()
+        """ Displays all spirtes in the game """
+        for sprite in self.all_sprites:
+            sprite.st()
+        logging.debug('All sprites made visible')
 
     def draw_screen(self, title, height, width, text_01 = "", text_02 = "", text_03 = ""):
         """ Template function to draw self screens """
@@ -326,6 +257,7 @@ class Game():
     def draw_welcome(self):
         """ Draw the welcome screen """
         self.draw_screen("SPACE WARS", 300, 300, "", "Press <Return> to start", "Press <ESC> to exit")
+        logging.debug('Welcome screen drawn')
 
     def draw_pause(self):
         self.draw_screen("GAME PAUSED", 300, 300, "", "Press <Return> to continue", "Press <ESC> to go to start screen")
@@ -333,6 +265,7 @@ class Game():
     def draw_over(self):
         """ Draw game over screen """
         self.draw_screen("GAME OVER", 300, 300, "Your final score: {}".format(self._score), "Press <Return> to continue", "Press <ESC> to exit")
+        logging.debug('Welcome screen drawn')
 
     def update_score(self, modifier_lives, modifier_score):
         """ Update the game score based on the given modifiers and draw it to the canvas """
@@ -340,4 +273,11 @@ class Game():
         self._score += modifier_score
         self.draw_score()
         if self._lives <= 0:    # check for player death
-            self.death()
+            self.state.transit('player_death')
+
+    def exit(self):
+        """ Close turtle panel and exit the self application """
+        self.state = self.exiting
+        logging.warn("Exiting python program via turtle")
+        self.pen.screen.bye
+        sys.exit()

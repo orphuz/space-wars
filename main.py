@@ -17,3 +17,6 @@ logging.basicConfig(filename = LOG_FILE,
                     filemode = 'w')
 
 game = game.Game("Space Wars")
+
+while True:
+    game.state.preperation()

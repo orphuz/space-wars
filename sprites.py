@@ -5,11 +5,9 @@ import logging
 
 class Sprite(turtle.Turtle):
 
-    instances = []
-    max_number = 3
-
-    def __init__(self, game, name, spriteshape, spritesize, color):
+    def __init__(self, game, name, spriteshape, spritesize, color, object_tracker):
         turtle.Turtle.__init__(self)
+        self.object_tracker = object_tracker
         self.game = game
         self._name = name
         self.shape(spriteshape)
@@ -40,7 +38,8 @@ class Sprite(turtle.Turtle):
 
     def despawn(self):
         self.ht()
-        self.instances.remove(self)
+        self.object_tracker.remove(self)
+        logging.debug('Instance of class {} despawned - currently:{} existing'.format(self.__class__, len(self.object_tracker)))
 
     def move(self):
         """ 
@@ -117,16 +116,21 @@ class Sprite(turtle.Turtle):
 
 class Player(Sprite):
     """ Player Sprite """
+
     def __init__(self, game):
-        Sprite.__init__(self, game, 'Player', 'triangle', 1, 'white')
+        Sprite.__init__(self, game, 'Player', 'triangle', 1, 'white', game.players_tracker)
         #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
         self.setpos(0,0)
         self.random_heading()
         self.speed = self.config_values['player_speed_default']
         self.lives = self.config_values['player_lives']
+        self.missiles_shot = []
+        self.max_missiles_number = 2 # Todo: make global?
 
-        # self.missiles_shot = []
-        # self.max_missiles_number = 5 # Todo: make global? 
+    @classmethod
+    def spawn(cls, game):
+        game.players_tracker.append(cls(game))
+        return game.players_tracker[-1]
 
     def turn_left(self):
         self.lt(self.config_values['player_turn_rate'])
@@ -147,23 +151,20 @@ class Player(Sprite):
 class Missile(Sprite):
     """ Missile Sprite """
 
-    instances = []
-    max_number = 2
-
-    def __init__(self, game, player):
-        Sprite.__init__(self, game, 'Missile', 'triangle', 0.5, 'yellow')
+    def __init__(self, game, shooter):
+        Sprite.__init__(self, game, 'Missile', 'triangle', 0.5, 'yellow', shooter.missiles_shot)
         #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
-        self.setpos(player.xpos, player.ypos)
-        self.setheading(player.heading())
+        self.setpos(shooter.xpos, shooter.ypos)
+        self.setheading(shooter.heading())
         self.speed = self.config_values['missile_speed']
 
     @classmethod
-    def spawn(cls, game, player):
-        if len(cls.instances) < cls.max_number:
-            cls.instances.append(cls(game, player))
-            logging.debug('Missile fired - currently:{}/{} flying'.format(len(cls.instances), cls.max_number))
+    def spawn(cls, game, shooter):
+        if len(shooter.missiles_shot) < shooter.max_missiles_number:
+            shooter.missiles_shot.append(Missile(game, shooter))
+            logging.debug('Missile fired - currently:{}/{} flying'.format(len(shooter.missiles_shot), shooter.max_missiles_number))
         else:
-            logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(cls.instances), cls.max_number))
+            logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(shooter.missiles_shot), shooter.max_missiles_number))
 
     def move(self):
         ''' Check for borders and distroies missele, otherwise moves '''
@@ -176,11 +177,9 @@ class Missile(Sprite):
 
 class Enemy(Sprite):
     """ Enemy sprite """
-    instance = []
-    max_number = 30
 
     def __init__(self, game):
-        Sprite.__init__(self, game, 'Enemy', 'circle', 1, 'red')
+        Sprite.__init__(self, game, 'Enemy', 'circle', 1, 'red', game.enemies_tracker)
         self.speed = self.config_values['enemy_speed']
         self.random_heading()
         self._value = 100
@@ -188,12 +187,12 @@ class Enemy(Sprite):
     @classmethod
     def spawn(cls, game, distance = 200):
         """ Spawns an object of type enemy """
-        if len(cls.instances) < cls.max_number:
-            cls.instances.append(cls(game))
-            cls.instances[-1].random_position(game.player, distance)
-            logging.debug('Enemy spawned - currently:{}/{} existing'.format(len(cls.instances), cls.max_number))
+        if len(game.enemies_tracker) < game.enemies_max_number:
+            game.enemies_tracker.append(cls(game))
+            game.enemies_tracker[-1].random_position(game.player, distance)
+            logging.debug('Enemy spawned - currently:{}/{} existing'.format(len(game.enemies_tracker), game.enemies_max_number))
         else:
-            logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(cls.instances), cls.max_number))
+            logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(game.enemies_tracker), game.enemies_max_number))
 
     @property
     def value(self):
