@@ -5,18 +5,22 @@ import logging
 import time
 import random
 
+from functools import partial
+
 import sprites
 import states
 import game_config
 
 class Game():
     def __init__(self, name):
-        """ Main self class """
+        """ Main game class """
         self.name = name
         self.config_values = self.load_config()
+        self.enemies = []
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
+        self.loop_delta = 1./self.config_values['game_fps'] #calculate loop time based on fixed FPS value
         self.pen = turtle.Turtle(visible = False)
         self.pen.screen.tracer(0)
         self.pen.color('white')
@@ -37,10 +41,10 @@ class Game():
         })
         self.paused = states.State("paused", {
             "confirm": "self.run()",
-            "cancel": "self.welcome()"
+            "cancel": "self.dead()"
         })
         self.over = states.State("over", {
-            "confirm": "self.run()",
+            "confirm": "self.welcome()",
             "cancel": "self.exit()"
         })
         self.exiting = states.State("exiting", {"cancel": "self.exit()"}) # Hack
@@ -54,9 +58,10 @@ class Game():
             self.exiting
         )
 
-        self.create_sprites()
+        self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values, None)
         self.bind_keys()
-        self.welcome()
+        self.state = self.welcoming
+        self.mainloop()
  
     @property
     def state(self):
@@ -72,27 +77,53 @@ class Game():
         #print('Set self.state = {}'.format(self.state.name))
         logging.debug('Set self.state = {}'.format(self.state.name))
 
+    def mainloop(self):
+        """ Main loop to check game state and trigger actions """
+        while self.state != self.exiting:
+
+            if self.state == self.welcoming:
+                self.welcome()
+            
+            if self.state == self.paused:
+                self.pause()
+
+            if self.state == self.over:
+                self.dead()
+
+            if self.state == self.exit:
+                self.exit()
+
+            self.pen.screen.update() # includes the check for key press
+            
+            time.sleep(0.1) # Slow down main loop
+
     def load_config(self):
         """ Load self config from the config file """
         config = game_config.Config()
         logging.debug("self config loaded")
-        return config.current_values
+        return config.current_values        
 
-    def create_sprites(self):
-        """ Create sprites for player, missile and enemies """
-        self.player = sprites.Player("triangle", 1, "white", 0, 0, self.config_values)
-        self.missile = sprites.Missile("triangle", 0.5, self.config_values, self.player) #Missle does always exist but is rendered offscreen when not used
-        self.enemies = list()
-        for i in range(self.config_values['enemy_max_no']):
-            self.enemies.append(sprites.Enemy("circle", 1, self.config_values)) 
+    def spawn_enemy(self, random_pos = True, distance = 200):
+        """ Spawns an object of type enemy """
+        self.enemies.append(sprites.Enemy("circle", 1, self.config_values, self.enemies))
+        self.enemies[-1].st()
+        if  random_pos == True:
+            self.enemies[-1].random_position(self.player, distance)
+        logging.debug("Enemy spawned, now: {}".format(len(self.enemies)))
+
+    def despawn_missile(self, missile_object):
+        """ Despawn a missile object by removing it's instance it fron the game.player.missiles list """
+        missile_object.despawn()
+        self.player.missiles_shot.remove(missile_object)
+        logging.debug("Missile despawned, now left: {}".format(len(self.player.missiles_shot)))
 
     def bind_keys(self):
         """ Assign Keyboard Bindings """
-        self.pen.screen.onkey(self.player.turn_left, "Left")
-        self.pen.screen.onkey(self.player.turn_right, "Right")
-        self.pen.screen.onkey(self.player.accelerate, "Up")
-        self.pen.screen.onkey(self.player.decelerate, "Down")
-        self.pen.screen.onkey(self.missile.fire, "space")
+        self.pen.screen.onkey(partial(self.player_ctrl, self.player.turn_left), "Left")
+        self.pen.screen.onkey(partial(self.player_ctrl, self.player.turn_right), "Right")
+        self.pen.screen.onkey(partial(self.player_ctrl, self.player.accelerate), "Up")
+        self.pen.screen.onkey(partial(self.player_ctrl, self.player.decelerate), "Down")
+        self.pen.screen.onkey(partial(self.player_ctrl, self.player.fire), "space")
         self.pen.screen.onkey(self.confirm, "Return")
         self.pen.screen.onkey(self.cancel, "Escape")
         self.pen.screen.listen()
@@ -105,9 +136,17 @@ class Game():
             self.pen.screen.update() # includes the check for key press
             time.sleep(0.1) # Slow down main loop
 
+    def player_ctrl(self, fun):
+        """ Executes game controls only when the game is in state <running> """
+        if self.state == self.running:
+            fun()
+        else:
+            logging.debug("Player controls are only available when game is running (current state: {})".format(self.state.name))
+
     def confirm(self):
         """ Player input to confirm """
-        eval(self.state.transit("confirm"))
+        exec_function = self.state.transit("confirm")
+        eval(exec_function)
 
     def cancel(self):
         """ Player input to cancel """
@@ -119,24 +158,86 @@ class Game():
 
     def welcome(self):
         """ Welcome screen aka Intro """
+        self.enemies.clear()
+        for i in range(self.config_values['enemy_max_no']):
+            self.spawn_enemy()
         self.draw_welcome()
         self.state = self.welcoming
+        while self.state == self.welcoming:
+            self.wait_for_input()
 
     def run(self):
-        """ Draw all self elements and run the self """
+        """ Draws all game elements and runs the game """
         self.draw_field()
         self.draw_score()
         self.state = self.running
+
+        current_time = target_time = time.perf_counter()
+
+        while self.state == self.running:
+                #logging.debug("Start of self loop with self.state = %s" % self.state)
+                self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
+                # time_delta = current_time - previous_time
+
+                self.pen.screen.update()
+
+                self.player.move()
+
+                for enemy in self.enemies:
+                    enemy.move()
+
+                for missile in self.player.missiles_shot:
+                    missile.move()
+
+                for enemy in self.enemies:
+                    #Check for collision with enemies
+                    if self.player.is_collision(enemy):
+                        enemy.despawn()
+                        self.spawn_enemy()
+                        self.update_score(-1, 0) #remove 1 live
+
+                    for missile in self.player.missiles_shot:
+                        # Check for collision with all missles shot
+                        if missile.is_collision(enemy):
+                            enemy.despawn()
+                            missile.despawn()
+                            self.spawn_enemy()
+                            self.spawn_enemy()
+                            self.update_score(0, enemy.value) #add 10 to score                 
+            
+                #### sleep management to achieve constant FPS
+                target_time += self.loop_delta
+                sleep_time = target_time - time.perf_counter()
+                if sleep_time > 0:
+                    # logging.debug("Sleeping for: {}".format(sleep_time))
+                    time.sleep(sleep_time)
+                else:
+                    print("Execution of main loop took too long: {}".format(sleep_time))
+                    logging.warning("Execution of main loop took too long: {}".format(sleep_time))
         
     def pause(self):
         self.draw_pause()
         self.state = self.paused
+        while self.state == self.paused:
+            self.wait_for_input()
     
     def dead(self):
         self.state = self.over
+        for enemy in self.enemies:
+            enemy.ht()
+        self.enemies.clear()
+        logging.debug('Deleted all enemies, now left: {}'.format(len(self.enemies)))
+        for missile in self.player.missiles_shot:
+            missile.ht()
+        self.player.missiles_shot.clear()
+        logging.debug('Deleted all players, now left: {}'.format(len(self.player.missiles_shot)))
+
         self.draw_over()
         self._score = 0
         self._lives = self.config_values['player_lives']
+
+        while self.state == self.paused:
+            self.wait_for_input()
 
     def exit(self):
         """ Close turtle panel and exit the self application """
@@ -149,13 +250,15 @@ class Game():
         self.player.ht()
         for enemy in self.enemies:
             enemy.ht()
-        self.missile.ht()
+        for missile in self.player.missiles_shot:
+            missile.ht()
 
     def show_sprites(self):
         self.player.st()
         for enemy in self.enemies:
             enemy.st()
-        self.missile.st()
+        for missile in self.player.missiles_shot:
+            missile.st()
 
     def draw_screen(self, title, height, width, text_01 = "", text_02 = "", text_03 = ""):
         """ Template function to draw self screens """
