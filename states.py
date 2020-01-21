@@ -60,7 +60,8 @@ class Running(State):
         "down": "self.game.player.decelerate()",
         "fire": "self.game.player.fire()",
         "cancel": "self.game.set_state(self.game.paused)",
-        "player_death": "self.game.set_state(self.game.over)"
+        "player_death": "self.game.set_state(self.game.over)",
+        "custom": "self.game.custom_action()"
     }
 
     def __init__(self, game):

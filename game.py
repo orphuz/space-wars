@@ -10,6 +10,7 @@ from functools import partial
 from sprites import Player
 from sprites import Enemy
 from sprites import Missile
+from sprites import Powerup
 
 import states
 import game_config
@@ -36,8 +37,11 @@ class Game():
         self.player = None
 
         self.enemies_tracker = []
-        self.enemies_max_number = 30
+        self.enemies_max_number = 10
         self.enemies_initial_number = 3
+
+        self.powerups_tracker = []
+        self.powerups_max_number = 2
 
         self.welcoming = states.Welcoming(self)
         self.running = states.Running(self)   
@@ -61,7 +65,7 @@ class Game():
 
     @property
     def all_sprites(self):
-        all_sprite_objects = self.players_tracker + self.enemies_tracker
+        all_sprite_objects = self.players_tracker + self.enemies_tracker + self.powerups_tracker
         for this_player in self.players_tracker:
             all_sprite_objects += this_player.missiles_shot
         return all_sprite_objects
@@ -84,6 +88,8 @@ class Game():
 
     def bind_keys(self):
         """ Assign Keyboard Bindings """
+        input_custom = partial(self.player_input, 'custom')
+        self.pen.screen.onkey(input_custom, "c")
         input_left = partial(self.player_input, 'left')
         self.pen.screen.onkey(input_left, "Left")
         input_right = partial(self.player_input, 'right')
@@ -126,6 +132,12 @@ class Game():
 
                 for sprite in self.all_sprites:
                     sprite.move()
+
+                for powerup in self.powerups_tracker:
+                    #Check for collision with enemies
+                    if self.player.is_collision(powerup):
+                        self.player.powerup_type = powerup.type
+                        powerup.despawn()
 
                 for enemy in self.enemies_tracker:
                     #Check for collision with enemies
@@ -281,3 +293,7 @@ class Game():
         logging.warn("Exiting python program via turtle")
         self.pen.screen.bye
         sys.exit()
+
+    def custom_action(self):
+        print('custom aciton triggered')
+        Powerup.spawn(self)
