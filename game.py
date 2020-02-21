@@ -39,9 +39,11 @@ class Game():
         self.enemies_tracker = []
         self.enemies_max_number = 10
         self.enemies_initial_number = 3
+        self.enemies_spawn_prob = 0.5
 
         self.powerups_tracker = []
         self.powerups_max_number = 2
+        self.powerups_spawn_prob = 0.5
 
         self.welcoming = states.Welcoming(self)
         self.running = states.Running(self)   
@@ -153,8 +155,8 @@ class Game():
                             enemy.despawn()
                             missile.despawn()
                             Enemy.spawn(self)
-                            Enemy.spawn(self)
-                            Powerup.spawn(self)           
+                            if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
+                            if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)           
             
                 #### sleep management to achieve constant FPS
                 target_time += self.loop_delta
@@ -167,6 +169,16 @@ class Game():
                     logging.warning("Execution of main loop took too long: {}".format(sleep_time))
         
    
+    def spawn_decision(self, probability = 0.5):
+        """
+        Returns a random true or false decision weighted by provied argument "probability"
+        """
+        random.seed()
+        decision = False
+        if random.randint(1, 101) > probability * 100:
+            decision = True
+        return decision
+
     def spawn_all_sprites(self):
         self.player = Player.spawn(self) 
         for _ in range(self.enemies_initial_number):
