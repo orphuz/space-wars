@@ -134,13 +134,13 @@ class Game():
                     sprite.move()
 
                 for powerup in self.powerups_tracker:
-                    #Check for collision with enemies
+                    #Check if player collects a power up
                     if self.player.is_collision(powerup):
                         self.player.powerup_type = powerup.type
                         powerup.despawn()
 
                 for enemy in self.enemies_tracker:
-                    #Check for collision with enemies
+                    #Check for player collision with enemies
                     if self.player.is_collision(enemy):
                         self.update_score(-1, 0) #remove 1 live
                         enemy.despawn()
@@ -149,11 +149,12 @@ class Game():
                     for missile in self.player.missiles_shot:
                         # Check for collision with all missles shot
                         if missile.is_collision(enemy):
-                            self.update_score(0, enemy.value) #add 10 to scor
+                            self.update_score(0, enemy.value) #add 10 to score
                             enemy.despawn()
                             missile.despawn()
                             Enemy.spawn(self)
-                            Enemy.spawn(self)             
+                            Enemy.spawn(self)
+                            Powerup.spawn(self)           
             
                 #### sleep management to achieve constant FPS
                 target_time += self.loop_delta
