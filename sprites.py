@@ -135,6 +135,9 @@ class Player(Sprite):
 
     @powerup_type.setter
     def powerup_type(self, input_powerup_type):
+        if input_powerup_type != '': 
+            #Start a timer
+            pass
         self._powerup_type = input_powerup_type
 
     @classmethod
