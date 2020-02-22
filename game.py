@@ -130,8 +130,6 @@ class Game():
                 self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
                 # time_delta = current_time - previous_time
 
-                self.pen.screen.update()
-
                 for sprite in self.all_sprites:
                     sprite.move()
 
@@ -164,9 +162,10 @@ class Game():
                 if sleep_time > 0:
                     # logging.debug("Sleeping for: {}".format(sleep_time))
                     time.sleep(sleep_time)
+                    self.pen.screen.update()
                 else:
-                    print("Execution of main loop took too long: {}".format(sleep_time))
-                    logging.warning("Execution of main loop took too long: {}".format(sleep_time))
+                    print("Dropping frame update: Execution of main loop took too long: {}".format(sleep_time))
+                    logging.warning("Dropping frame update - Execution of main loop took too long: {}".format(sleep_time))
         
    
     def spawn_decision(self, probability = 0.5):
