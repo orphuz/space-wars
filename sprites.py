@@ -38,7 +38,10 @@ class Sprite(turtle.Turtle):
 
     def despawn(self):
         self.ht()
-        self.object_tracker.remove(self)
+        try:
+            self.object_tracker.remove(self)
+        except ValueError as valerr:
+            logging.error(f'{valerr} - Cannot despawn {self} as it is not member of {self.object_tracker}')
         logging.debug('Instance of class {} despawned - currently:{} existing'.format(self.__class__, len(self.object_tracker)))
 
     def move(self):

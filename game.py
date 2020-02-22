@@ -124,6 +124,7 @@ class Game():
     def main_loop(self):
         """ Run the main game """
         current_time = target_time = time.perf_counter()
+        frame_drop_counter = 0
 
         while self.state == self.running:
                 #logging.debug("Start of self loop with self.state = %s" % self.state)
@@ -162,11 +163,17 @@ class Game():
                 if sleep_time > 0:
                     # logging.debug("Sleeping for: {}".format(sleep_time))
                     time.sleep(sleep_time)
+                    if frame_drop_counter > 0 :
+                        frame_drop_counter -= frame_drop_counter
+                            
                     self.pen.screen.update()
                 else:
+                    frame_drop_counter += frame_drop_counter
                     print("Dropping frame update: Execution of main loop took too long: {}".format(sleep_time))
                     logging.warning("Dropping frame update - Execution of main loop took too long: {}".format(sleep_time))
-        
+                    if frame_drop_counter > 5:
+                        print("Warning: Dropped more than five frames in a row")
+                        logging.error("Dropped more than five frames in a row")
    
     def spawn_decision(self, probability = 0.5):
         """
