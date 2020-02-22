@@ -127,53 +127,53 @@ class Game():
         frame_drop_counter = 0
 
         while self.state == self.running:
-                #logging.debug("Start of self loop with self.state = %s" % self.state)
-                self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
-                # time_delta = current_time - previous_time
+            #logging.debug("Start of self loop with self.state = %s" % self.state)
+            self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
+            # time_delta = current_time - previous_time
 
-                for sprite in self.all_sprites:
-                    sprite.move()
+            for sprite in self.all_sprites:
+                sprite.move()
 
-                for powerup in self.powerups_tracker:
-                    #Check if player collects a power up
-                    if self.player.is_collision(powerup):
-                        self.player.powerup_type = powerup.type
-                        powerup.despawn()
+            for powerup in self.powerups_tracker:
+                #Check if player collects a power up
+                if self.player.is_collision(powerup):
+                    self.player.powerup_type = powerup.type
+                    powerup.despawn()
 
-                for enemy in self.enemies_tracker:
-                    #Check for player collision with enemies
-                    if self.player.is_collision(enemy):
-                        self.update_score(-1, 0) #remove 1 live
+            for enemy in self.enemies_tracker:
+                #Check for player collision with enemies
+                if self.player.is_collision(enemy):
+                    self.update_score(-1, 0) #remove 1 live
+                    enemy.despawn()
+                    Enemy.spawn(self)
+
+                for missile in self.player.missiles_shot:
+                    # Check for collision with all missles shot
+                    if missile.is_collision(enemy):
+                        self.update_score(0, enemy.value) #add 10 to score
                         enemy.despawn()
+                        missile.despawn()
                         Enemy.spawn(self)
-
-                    for missile in self.player.missiles_shot:
-                        # Check for collision with all missles shot
-                        if missile.is_collision(enemy):
-                            self.update_score(0, enemy.value) #add 10 to score
-                            enemy.despawn()
-                            missile.despawn()
-                            Enemy.spawn(self)
-                            if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
-                            if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)           
-            
-                #### sleep management to achieve constant FPS
-                target_time += self.loop_delta
-                sleep_time = target_time - time.perf_counter()
-                if sleep_time > 0:
-                    # logging.debug("Sleeping for: {}".format(sleep_time))
-                    time.sleep(sleep_time)
-                    if frame_drop_counter > 0 :
-                        frame_drop_counter -= frame_drop_counter
-                            
-                    self.pen.screen.update()
-                else:
-                    frame_drop_counter += frame_drop_counter
-                    print("Dropping frame update: Execution of main loop took too long: {}".format(sleep_time))
-                    logging.warning("Dropping frame update - Execution of main loop took too long: {}".format(sleep_time))
-                    if frame_drop_counter > 5:
-                        print("Warning: Dropped more than five frames in a row")
-                        logging.error("Dropped more than five frames in a row")
+                        if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
+                        if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)           
+        
+            #### sleep management to achieve constant FPS
+            target_time += self.loop_delta
+            sleep_time = target_time - time.perf_counter()
+            if sleep_time > 0:
+                # logging.debug("Sleeping for: {}".format(sleep_time))
+                time.sleep(sleep_time)
+                if frame_drop_counter > 0 :
+                    frame_drop_counter -= frame_drop_counter
+                        
+                self.pen.screen.update()
+            else:
+                frame_drop_counter += frame_drop_counter
+                print("Dropping frame update: Execution of main loop took too long: {}".format(sleep_time))
+                logging.warning("Dropping frame update - Execution of main loop took too long: {}".format(sleep_time))
+                if frame_drop_counter > 5:
+                    print("Warning: Dropped more than five frames in a row")
+                    logging.error("Dropped more than five frames in a row")
    
     def spawn_decision(self, probability = 0.5):
         """
@@ -314,5 +314,5 @@ class Game():
         sys.exit()
 
     def custom_action(self):
-        print('custom aciton triggered')
+        logging.debug('custom aciton triggered - spawn powerup')
         Powerup.spawn(self)
