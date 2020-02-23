@@ -11,6 +11,12 @@ logging.basicConfig(filename = LOG_FILE,
                     format = LOG_FORMAT,
                     filemode = 'w')
 
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(levelname)-8s %(message)s')
+console.setFormatter(formatter)
+logging.getLogger('').addHandler(console)
+
 game = game.Game("Space Wars")
 
 while True:

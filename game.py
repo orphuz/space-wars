@@ -78,7 +78,6 @@ class Game():
             logging.error('Requested state <%s> is unknown' % state_request)
             raise ValueError('Requested state <%s> is unknown' % state_request)
         self.state = state_request
-        #print('Set self.state = {}'.format(self.state.name))
         logging.debug('Set game.state = {}'.format(self.state.name))
         self.state.preperation()
 
@@ -169,17 +168,16 @@ class Game():
             if sleep_time > 0:
                 time.sleep(sleep_time)
                 if frame_drop_counter > 0 :
-                    frame_drop_counter -= frame_drop_counter
+                    frame_drop_counter -= 1
                         
                 self.pen.screen.update()
                 
             else:
                 frame_drop_counter += 1
-                print(f"Dropping frame update: Execution of main loop took {-sleep_time} s too long - happend {frame_drop_counter} time(s)")
-                logging.warning(f"Dropping frame update: Execution of main loop took {-sleep_time} s too long - happend {frame_drop_counter} time(s)")
+                logging.warning(f"Dropping frame update: Execution of main loop took {abs(sleep_time):.6f}s too long - happend {frame_drop_counter} time(s)")
                 if frame_drop_counter > 5:
-                    print("Warning: Dropped more than five frames in a row")
-                    logging.error("Dropped more than five frames in a row")
+                    logging.error("Dropped more than five frames in a row - force updating screen now")
+                    self.pen.screen.update()
    
     def spawn_decision(self, probability = 0.5):
         """

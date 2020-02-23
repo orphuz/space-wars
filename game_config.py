@@ -25,7 +25,7 @@ class Config():
         self.config.read(self._config_file)
         if self.config == []:
             self.config = self._DEFAULTVALUES
-            print('Fallback to default values!')
+            logging.warning('Fallback to default values!')
 
     @property
     def current_values(self):
