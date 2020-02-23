@@ -19,4 +19,4 @@ logging.basicConfig(filename = LOG_FILE,
 game = game.Game("Space Wars")
 
 while True:
-    game.state.preperation()
+    game.main_loop()

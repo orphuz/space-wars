@@ -116,23 +116,18 @@ class Game():
 
     def wait_for_input(self, state):
         """ wait for input of player """
-        while self.state == state:
-            logging.debug('self {} - Waiting for player input'.format(self.state.name))
-            self.pen.screen.update() # includes the check for key press
-            time.sleep(0.1) # Slow down main loop
+        pass
+        # while self.state == state:
+        #     logging.debug('self {} - Waiting for player input'.format(self.state.name))
+        #     self.pen.screen.update() # includes the check for key press
+        #     time.sleep(0.1) # Slow down main loop
 
-    def main_loop(self):
-        """ Run the main game """
-        current_time = target_time = time.perf_counter()
-        frame_drop_counter = 0
-
-        while self.state == self.running:
-            #logging.debug("Start of self loop with self.state = %s" % self.state)
-            self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
-            # time_delta = current_time - previous_time
-
-            for sprite in self.all_sprites:
-                sprite.move()
+    def calculate_next_frame(self):
+        """
+        Move all sprite for one iteration an check for collisions
+        """
+        for sprite in self.all_sprites:
+            sprite.move()
 
             for powerup in self.powerups_tracker:
                 #Check if player collects a power up
@@ -143,9 +138,9 @@ class Game():
             for enemy in self.enemies_tracker:
                 #Check for player collision with enemies
                 if self.player.is_collision(enemy):
-                    self.update_score(-1, 0) #remove 1 live
                     enemy.despawn()
                     Enemy.spawn(self)
+                    self.update_score(-1, 0) #remove 1 live
 
                 for missile in self.player.missiles_shot:
                     # Check for collision with all missles shot
@@ -155,8 +150,20 @@ class Game():
                         missile.despawn()
                         Enemy.spawn(self)
                         if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
-                        if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)           
-        
+                        if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)
+
+    def main_loop(self):
+        """ Run the main game """
+        current_time = target_time = time.perf_counter()
+        frame_drop_counter = 0
+
+        while True:
+            #logging.debug("Start of self loop with self.state = %s" % self.state)
+            self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
+            # time_delta = current_time - previous_time
+
+            self.state.execution()
+                     
             #### sleep management to achieve constant FPS
             target_time += self.loop_delta
             sleep_time = target_time - time.perf_counter()
@@ -168,9 +175,9 @@ class Game():
                         
                 self.pen.screen.update()
             else:
-                frame_drop_counter += frame_drop_counter
-                print("Dropping frame update: Execution of main loop took too long: {}".format(sleep_time))
-                logging.warning("Dropping frame update - Execution of main loop took too long: {}".format(sleep_time))
+                frame_drop_counter += 1
+                print(f"Dropping frame update: Execution of main loop took too long: {sleep_time} - happend {frame_drop_counter} time(s)")
+                logging.warning(f"Dropping frame update: Execution of main loop took too long: {sleep_time} - happend {frame_drop_counter} time(s)")
                 if frame_drop_counter > 5:
                     print("Warning: Dropped more than five frames in a row")
                     logging.error("Dropped more than five frames in a row")
@@ -186,13 +193,16 @@ class Game():
         return decision
 
     def spawn_all_sprites(self):
+        """
+        Create all sprites (player and enemy) based on their initial number
+        """
         self.player = Player.spawn(self) 
         for _ in range(self.enemies_initial_number):
             Enemy.spawn(self)
         logging.debug('All enemies spawned')
 
     def despawn_all_sprites(self):
-        """ Hides and resets all sprites in the game """
+        """ Hides and removes all sprites in the game """
         self.hide_sprites()
 
         for sprite in self.all_sprites:
@@ -252,7 +262,9 @@ class Game():
         logging.debug("<{}> screen drawn".format(title))
 
     def draw_field(self):
-        """ Draw border of the game field """
+        """
+        Draw border of the game field
+        """
         self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
