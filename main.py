@@ -1,9 +1,4 @@
 #My SpaceWars Game by Kalli
-import os
-import sys
-import time
-import random
-import turtle
 import logging
 
 import game
