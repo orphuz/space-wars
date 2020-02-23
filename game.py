@@ -158,9 +158,8 @@ class Game():
         frame_drop_counter = 0
 
         while True:
-            #logging.debug("Start of self loop with self.state = %s" % self.state)
+
             self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
-            # time_delta = current_time - previous_time
 
             self.state.execution()
                      
@@ -168,16 +167,16 @@ class Game():
             target_time += self.loop_delta
             sleep_time = target_time - time.perf_counter()
             if sleep_time > 0:
-                # logging.debug("Sleeping for: {}".format(sleep_time))
                 time.sleep(sleep_time)
                 if frame_drop_counter > 0 :
                     frame_drop_counter -= frame_drop_counter
                         
                 self.pen.screen.update()
+                
             else:
                 frame_drop_counter += 1
-                print(f"Dropping frame update: Execution of main loop took too long: {sleep_time} - happend {frame_drop_counter} time(s)")
-                logging.warning(f"Dropping frame update: Execution of main loop took too long: {sleep_time} - happend {frame_drop_counter} time(s)")
+                print(f"Dropping frame update: Execution of main loop took {-sleep_time} s too long - happend {frame_drop_counter} time(s)")
+                logging.warning(f"Dropping frame update: Execution of main loop took {-sleep_time} s too long - happend {frame_drop_counter} time(s)")
                 if frame_drop_counter > 5:
                     print("Warning: Dropped more than five frames in a row")
                     logging.error("Dropped more than five frames in a row")
