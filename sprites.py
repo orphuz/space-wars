@@ -38,7 +38,10 @@ class Sprite(turtle.Turtle):
 
     def despawn(self):
         self.ht()
-        self.object_tracker.remove(self)
+        try:
+            self.object_tracker.remove(self)
+        except ValueError as valerr:
+            logging.error(f'{valerr} - Cannot despawn {self} as it is not member of {self.object_tracker}')
         logging.debug('Instance of class {} despawned - currently:{} existing'.format(self.__class__, len(self.object_tracker)))
 
     def move(self):
@@ -117,6 +120,8 @@ class Sprite(turtle.Turtle):
 class Player(Sprite):
     """ Player Sprite """
 
+    _powerup_type = ''
+
     def __init__(self, game):
         Sprite.__init__(self, game, 'Player', 'triangle', 1, 'white', game.players_tracker)
         #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
@@ -125,7 +130,18 @@ class Player(Sprite):
         self.speed = self.config_values['player_speed_default']
         self.lives = self.config_values['player_lives']
         self.missiles_shot = []
-        self.max_missiles_number = 2 # Todo: make global?
+        self.max_missiles_number = 3 # Todo: make global?
+
+    @property
+    def powerup_type(self):
+        return self._powerup_type
+
+    @powerup_type.setter
+    def powerup_type(self, input_powerup_type):
+        if input_powerup_type != '': 
+            #Start a timer
+            pass
+        self._powerup_type = input_powerup_type
 
     @classmethod
     def spawn(cls, game):
@@ -144,24 +160,29 @@ class Player(Sprite):
     def decelerate(self):
         self.speed -= 1
 
-    def fire(self):       
-        Missile.spawn(self.game, self)
+    def fire(self):
+        if self._powerup_type == '':      
+            Missile.spawn(self.game, self)
+        elif self._powerup_type == 'multi_shot':
+            Missile.spawn(self.game, self, 10)
+            Missile.spawn(self.game, self, 0)
+            Missile.spawn(self.game, self, -10)
 
 
 class Missile(Sprite):
     """ Missile Sprite """
 
-    def __init__(self, game, shooter):
+    def __init__(self, game, shooter, change_heading = 0):
         Sprite.__init__(self, game, 'Missile', 'triangle', 0.5, 'yellow', shooter.missiles_shot)
         #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
         self.setpos(shooter.xpos, shooter.ypos)
-        self.setheading(shooter.heading())
+        self.setheading(shooter.heading() + change_heading)
         self.speed = self.config_values['missile_speed']
 
     @classmethod
-    def spawn(cls, game, shooter):
+    def spawn(cls, game, shooter, change_heading = 0):
         if len(shooter.missiles_shot) < shooter.max_missiles_number:
-            shooter.missiles_shot.append(Missile(game, shooter))
+            shooter.missiles_shot.append(Missile(game, shooter , change_heading))
             logging.debug('Missile fired - currently:{}/{} flying'.format(len(shooter.missiles_shot), shooter.max_missiles_number))
         else:
             logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(shooter.missiles_shot), shooter.max_missiles_number))
@@ -197,3 +218,36 @@ class Enemy(Sprite):
     @property
     def value(self):
         return self._value
+
+
+class Powerup(Sprite):
+    """ Power Up sprite """
+
+    _type = None
+    _types = [
+        'missile_speed',
+        'multi_shot',
+        'increment_missiles'
+        ]
+
+    def __init__(self, game, type):
+        Sprite.__init__(self, game, 'Power Up', 'circle', 1, 'green', game.powerups_tracker)
+        self.speed = 0
+        if type in self._types:
+            self._type = type
+        else:
+            logging.error('{} is not a valid type. Expected <{}>'.format(type, self._types))
+
+    @property
+    def type(self):
+        return self._type
+
+    @classmethod
+    def spawn(cls, game, distance = 50):
+        """ Spawns an object of type enemy """
+        if len(game.powerups_tracker) < game.powerups_max_number:
+            game.powerups_tracker.append(cls(game, 'multi_shot'))
+            game.powerups_tracker[-1].random_position(game.player, distance)
+            logging.debug('Enemy spawned - currently:{}/{} existing'.format(len(game.powerups_tracker), game.powerups_max_number))
+        else:
+            logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(game.powerups_tracker), game.powerups_max_number))

@@ -1,9 +1,4 @@
 #My SpaceWars Game by Kalli
-import os
-import sys
-import time
-import random
-import turtle
 import logging
 
 import game
@@ -16,7 +11,13 @@ logging.basicConfig(filename = LOG_FILE,
                     format = LOG_FORMAT,
                     filemode = 'w')
 
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(levelname)-8s %(message)s')
+console.setFormatter(formatter)
+logging.getLogger('').addHandler(console)
+
 game = game.Game("Space Wars")
 
 while True:
-    game.state.preperation()
+    game.main_loop()
