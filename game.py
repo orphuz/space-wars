@@ -323,10 +323,13 @@ class Game():
 
     def load_highscore(self):
         try:
-            self._highscore = pickle.load( open( self._highscorefile, "rb" ) )
+            highscore = pickle.load( open( self._highscorefile, "rb" ) )
         except IOError as ioerr:
             logging.warn(f"{ioerr} - No pickled high score found, creating new with integer value 0")
             pickle.dump(int(0), open(self._highscorefile, "wb" ) )
+            highscore = 0
+        finally:
+            self._highscore = highscore
 
     def save_highscore(self):
         pickle.dump( self._highscore, open( self._highscorefile, "wb" ) )
