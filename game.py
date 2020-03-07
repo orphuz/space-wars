@@ -4,6 +4,7 @@ import turtle
 import logging
 import time
 import random
+import pickle
 
 from functools import partial
 
@@ -20,7 +21,7 @@ class Game():
         """ Main game class """
         self.name = name
         self.config_values = self.load_config()
-        self._highscore = 2000 #TODO: Make it a dynamically loaded value from a pickled object
+        self._highscore = pickle.load( open( "highscore.p", "rb" ) )
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
@@ -305,7 +306,10 @@ class Game():
 
     def draw_over(self):
         """ Draw game over screen """
-          self.draw_screen("GAME OVER", 300, 300, f"Your final score: {self._score}\n\nHighscore: {self._highscore}", "Press <Return> to continue", "Press <ESC> to exit")
+        if self._score > self._highscore: self._highscore = self._score
+        #TODO: Create notification aboud a newly set highscore
+        self.draw_screen("GAME OVER", 300, 300, f"Your final score: {self._score}\n\nHighscore: {self._highscore}", "Press <Return> to continue", "Press <ESC> to exit")
+        pickle.dump( self._highscore, open( "highscore.p", "wb" ) )
         logging.debug('Welcome screen drawn')
 
     def update_score(self, modifier_lives, modifier_score):
