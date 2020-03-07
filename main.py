@@ -19,5 +19,4 @@ logging.getLogger('').addHandler(console)
 
 game = game.Game("Space Wars")
 
-while True:
-    game.main_loop()
+game.main_loop()

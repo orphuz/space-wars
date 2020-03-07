@@ -285,8 +285,9 @@ class Game():
     def draw_score(self):
         """ Disply the self score """
         self._t_score.clear()
-        msg_lives = "Lives: %s" %(self._lives)
-        msg_score = "Score: %s" %(self._score)
+        msg_lives = f"Lives: {self._lives}"
+        msg_score = f"Score: {self._score}"
+        msg_highscore = f"High Score: {self._highscore}"
         self._t_score.penup()
         self._t_score.goto(- int(float(self.config_values['field_width']) / 2), int(float(self.config_values['field_height']) / 2 + 10))
         self._t_score.pendown()
@@ -295,6 +296,10 @@ class Game():
         self._t_score.goto(- int(float(self.config_values['field_width']) / 2) , int(float(self.config_values['field_height']) / 2 + 30))
         self._t_score.pendown()
         self._t_score.write(msg_score, font=("Arial", 16, "normal"))
+        self._t_score.penup()
+        self._t_score.goto( int(float(self.config_values['field_width']) / 2 - 165), int(float(self.config_values['field_height']) / 2 + 10))
+        self._t_score.pendown()
+        self._t_score.write(msg_highscore, font=("Arial", 16, "normal"))
         logging.debug("Score drawn")
 
     def draw_welcome(self):
@@ -307,8 +312,7 @@ class Game():
 
     def draw_over(self):
         """ Draw game over screen """
-        if self._score > self._highscore: self._highscore = self._score
-        #TODO: Create notification about a newly set highscore
+        #TODO: Create notification about a newly set highscore, e.g. by comparing to currently pickled high score (=last high score)
         self.draw_screen("GAME OVER", 300, 300, f"Your final score: {self._score}\n\nHighscore: {self._highscore}", "Press <Return> to continue", "Press <ESC> to exit")
         self.save_highscore()
         logging.debug('Welcome screen drawn')
@@ -317,6 +321,7 @@ class Game():
         """ Update the game score based on the given modifiers and draw it to the canvas """
         self._lives += modifier_lives
         self._score += modifier_score
+        if self._highscore < self._score: self._highscore = self._score
         self.draw_score()
         if self._lives <= 0:    # check for player death
             self.state.transit('player_death')
