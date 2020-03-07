@@ -22,7 +22,7 @@ class Game():
         self.name = name
         self.config_values = self.load_config()
         self._highscorefile = "highscore.pickle"
-        self._highscore = pickle.load( open( self._highscorefile, "rb" ) )
+        self.load_highscore()
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
@@ -321,13 +321,20 @@ class Game():
         if self._lives <= 0:    # check for player death
             self.state.transit('player_death')
 
+    def load_highscore(self):
+        try:
+            self._highscore = pickle.load( open( self._highscorefile, "rb" ) )
+        except IOError as ioerr:
+            logging.warn(f"{ioerr} - No pickled high score found, creating new with integer value 0")
+            pickle.dump(int(0), open(self._highscorefile, "wb" ) )
+
+    def save_highscore(self):
+        pickle.dump( self._highscore, open( self._highscorefile, "wb" ) )
+
     def reset_highscore(self):
         self._highscore = 0
         self.save_highscore()
         self.state.preperation()
-
-    def save_highscore(self):
-        pickle.dump( self._highscore, open( self._highscorefile, "wb" ) )
 
     def exit(self):
         """ Close turtle panel and exit the self application """
