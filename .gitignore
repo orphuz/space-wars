@@ -35,8 +35,7 @@ MANIFEST
 *.spec
 
 # Pickled objects
-*.p
-highscore.p
+#*.pickle
 
 # Installer logs
 pip-log.txt

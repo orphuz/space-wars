@@ -21,7 +21,8 @@ class Game():
         """ Main game class """
         self.name = name
         self.config_values = self.load_config()
-        self._highscore = pickle.load( open( "highscore.p", "rb" ) )
+        self._highscorefile = "highscore.pickle"
+        self._highscore = pickle.load( open( self._highscorefile, "rb" ) )
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
@@ -326,7 +327,7 @@ class Game():
         self.state.preperation()
 
     def save_highscore(self):
-        pickle.dump( self._highscore, open( "highscore.p", "wb" ) )
+        pickle.dump( self._highscore, open( self._highscorefile, "wb" ) )
 
     def exit(self):
         """ Close turtle panel and exit the self application """
