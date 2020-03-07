@@ -102,6 +102,7 @@ class Over(State):
     """ Game over Screen """
     
     _transition_table = {
+        "custom": "self.game.reset_highscore()",
         "confirm": "self.game.set_state(self.game.welcoming)",
         "cancel": "self.game.set_state(self.game.exiting)"    
     }

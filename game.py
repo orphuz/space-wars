@@ -307,9 +307,9 @@ class Game():
     def draw_over(self):
         """ Draw game over screen """
         if self._score > self._highscore: self._highscore = self._score
-        #TODO: Create notification aboud a newly set highscore
+        #TODO: Create notification about a newly set highscore
         self.draw_screen("GAME OVER", 300, 300, f"Your final score: {self._score}\n\nHighscore: {self._highscore}", "Press <Return> to continue", "Press <ESC> to exit")
-        pickle.dump( self._highscore, open( "highscore.p", "wb" ) )
+        self.save_highscore()
         logging.debug('Welcome screen drawn')
 
     def update_score(self, modifier_lives, modifier_score):
@@ -319,6 +319,14 @@ class Game():
         self.draw_score()
         if self._lives <= 0:    # check for player death
             self.state.transit('player_death')
+
+    def reset_highscore(self):
+        self._highscore = 0
+        self.save_highscore()
+        self.state.preperation()
+
+    def save_highscore(self):
+        pickle.dump( self._highscore, open( "highscore.p", "wb" ) )
 
     def exit(self):
         """ Close turtle panel and exit the self application """
