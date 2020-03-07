@@ -4,6 +4,7 @@ import turtle
 import logging
 import time
 import random
+import pickle
 
 from functools import partial
 
@@ -20,6 +21,8 @@ class Game():
         """ Main game class """
         self.name = name
         self.config_values = self.load_config()
+        self._highscorefile = "highscore.pickle"
+        self.load_highscore()
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
@@ -282,8 +285,9 @@ class Game():
     def draw_score(self):
         """ Disply the self score """
         self._t_score.clear()
-        msg_lives = "Lives: %s" %(self._lives)
-        msg_score = "Score: %s" %(self._score)
+        msg_lives = f"Lives: {self._lives}"
+        msg_score = f"Score: {self._score}"
+        msg_highscore = f"High Score: {self._highscore}"
         self._t_score.penup()
         self._t_score.goto(- int(float(self.config_values['field_width']) / 2), int(float(self.config_values['field_height']) / 2 + 10))
         self._t_score.pendown()
@@ -292,6 +296,10 @@ class Game():
         self._t_score.goto(- int(float(self.config_values['field_width']) / 2) , int(float(self.config_values['field_height']) / 2 + 30))
         self._t_score.pendown()
         self._t_score.write(msg_score, font=("Arial", 16, "normal"))
+        self._t_score.penup()
+        self._t_score.goto( int(float(self.config_values['field_width']) / 2 - 165), int(float(self.config_values['field_height']) / 2 + 10))
+        self._t_score.pendown()
+        self._t_score.write(msg_highscore, font=("Arial", 16, "normal"))
         logging.debug("Score drawn")
 
     def draw_welcome(self):
@@ -304,16 +312,40 @@ class Game():
 
     def draw_over(self):
         """ Draw game over screen """
-        self.draw_screen("GAME OVER", 300, 300, "Your final score: {}".format(self._score), "Press <Return> to continue", "Press <ESC> to exit")
+        #TODO: Create notification about a newly set highscore, e.g. by comparing to currently pickled high score (=last high score)
+        self.draw_screen("GAME OVER", 300, 300, f"Your final score: {self._score}\n\nHighscore: {self._highscore}", "Press <Return> to continue", "Press <ESC> to exit")
+        self.save_highscore()
         logging.debug('Welcome screen drawn')
 
     def update_score(self, modifier_lives, modifier_score):
         """ Update the game score based on the given modifiers and draw it to the canvas """
         self._lives += modifier_lives
         self._score += modifier_score
+        if self._highscore < self._score: self._highscore = self._score
         self.draw_score()
         if self._lives <= 0:    # check for player death
             self.state.transit('player_death')
+
+    def load_highscore(self):
+        """ Try to load a high score value from a pickel. If it fails, sets high score to 0 """
+        try:
+            highscore = pickle.load( open( self._highscorefile, "rb" ) )
+        except IOError as ioerr:
+            logging.warn(f"{ioerr} - No pickled high score found, creating new with integer value 0")
+            pickle.dump(int(0), open(self._highscorefile, "wb" ) )
+            highscore = 0
+        finally:
+            self._highscore = highscore
+
+    def save_highscore(self):
+        """ Save high score to pickle file """
+        pickle.dump( self._highscore, open( self._highscorefile, "wb" ) )
+
+    def reset_highscore(self):
+        """ Reset high score value to 0 and refresh screen """
+        self._highscore = 0
+        self.save_highscore()
+        self.state.preperation()
 
     def exit(self):
         """ Close turtle panel and exit the self application """
@@ -323,5 +355,6 @@ class Game():
         sys.exit()
 
     def custom_action(self):
+        """ Custom action trigger vie key press - currently "c" """
         logging.debug('custom aciton triggered - spawn powerup')
         Powerup.spawn(self)
