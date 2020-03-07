@@ -1,7 +1,27 @@
 # space-wars
 A small 2d game based on the turtle library for the purpose  of self education in python.
+This game focuses on being a platform to implement serveral development principles and python functionality:
 
-This game focuses on being a platform to implement serveral development principles and python methods:
+Design principles
+* Object oriented programming (e.g. game, sprite and state classes)
+* Class inheritage (different type of sprites)
+* Modules
+* Finite state machine (game states runninng, paused etc.)
 
-* Object oriented programming
-**
+Python functionality
+* decorators (e.g. @property)
+* class methods (e.g. sprite spawning)
+
+Python standart libraries
+* os
+* sys
+* time
+* import random
+* logging
+* import pickle
+* turtle
+
+
+
+
+
