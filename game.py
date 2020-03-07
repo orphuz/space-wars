@@ -322,6 +322,7 @@ class Game():
             self.state.transit('player_death')
 
     def load_highscore(self):
+        """ Try to load a high score value from a pickel. If it fails, sets high score to 0 """
         try:
             highscore = pickle.load( open( self._highscorefile, "rb" ) )
         except IOError as ioerr:
@@ -332,9 +333,11 @@ class Game():
             self._highscore = highscore
 
     def save_highscore(self):
+        """ Save high score to pickle file """
         pickle.dump( self._highscore, open( self._highscorefile, "wb" ) )
 
     def reset_highscore(self):
+        """ Reset high score value to 0 and refresh screen """
         self._highscore = 0
         self.save_highscore()
         self.state.preperation()
@@ -347,5 +350,6 @@ class Game():
         sys.exit()
 
     def custom_action(self):
+        """ Custom action trigger vie key press - currently "c" """
         logging.debug('custom aciton triggered - spawn powerup')
         Powerup.spawn(self)
