@@ -27,11 +27,15 @@ class Game():
         self._score = 0
         self._lives = self.config_values['player_lives']
         self.loop_delta = 1./self.config_values['game_fps'] #calculate loop time based on fixed FPS value
+
+        self._user_input = None
+
         self.pen = turtle.Turtle(visible = False)
         self.pen.screen.tracer(0)
         self.pen.color('white')
         self.pen.screen.bgcolor("black")
         self.pen.speed(0)
+
         self._t_score = turtle.Turtle(visible = False)
         self._t_score.color('white')
         self._t_score.penup()
@@ -112,12 +116,19 @@ class Game():
         logging.debug("Key bindings successfully assigned ")
 
     def player_input(self, input):
-        """ Request the initially key binded input at the currents state transition function """
+        """ Store the player input in the game objects _user_input variable """
         logging.debug('Player input: {}'.format(input))
-        self.state.transit(input)        
+        self._user_input = input
+
+    def process_input(self):
+        """ If _user_input is not None processes it by triggering the state transition, otherwise does nothing """
+        if self._user_input != None:
+            current_input = self._user_input
+            self._user_input = None
+            self.state.transit(current_input)
 
     def wait_for_input(self, state):
-        """ wait for input of player """
+        """ wait for input of player by essentially doing nothing """
         pass
         # while self.state == state:
         #     logging.debug('self {} - Waiting for player input'.format(self.state.name))
@@ -162,6 +173,8 @@ class Game():
         while True:
 
             self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
+
+            self.process_input()
 
             self.state.execution()
                      
