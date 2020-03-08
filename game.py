@@ -13,20 +13,20 @@ from sprites import Enemy
 from sprites import Missile
 from sprites import Powerup
 
+from helpers.game_config import Config
+from helpers.fps_manager import Fps_manager
+
 import states
-import game_config
 
 class Game():
     def __init__(self, name):
         """ Main game class """
-        self.name = name
         self.config_values = self.load_config()
         self._highscorefile = "highscore.pickle"
         self.load_highscore()
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
-        self.loop_delta = 1./self.config_values['game_fps'] #calculate loop time based on fixed FPS value
 
         self._user_input = None
 
@@ -90,7 +90,7 @@ class Game():
 
     def load_config(self):
         """ Load self config from the config file """
-        config = game_config.Config()
+        config = Config()
         logging.debug("self config loaded")
         return config.current_values        
 
@@ -167,33 +167,17 @@ class Game():
 
     def main_loop(self):
         """ Run the main game """
-        current_time = target_time = time.perf_counter()
-        frame_drop_counter = 0
-
+        render_manager = Fps_manager(self.config_values['game_fps'])
+        
         while True:
 
-            self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
+            render_manager.update()
 
-            self.process_input()
+            self.process_input() # process user unput
+            self.state.execution() # update frame
 
-            self.state.execution()
-                     
-            #### sleep management to achieve constant FPS
-            target_time += self.loop_delta
-            sleep_time = target_time - time.perf_counter()
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-                if frame_drop_counter > 0 :
-                    frame_drop_counter -= 1
-                        
-                self.pen.screen.update()
-                
-            else:
-                frame_drop_counter += 1
-                logging.warning(f"Dropping frame update: Execution of main loop took {abs(sleep_time):.6f}s too long - happend {frame_drop_counter} time(s)")
-                if frame_drop_counter > 5:
-                    logging.error("Dropped more than five frames in a row - force updating screen now")
-                    self.pen.screen.update()
+            if render_manager.decide_to_render(): self.pen.screen.update() #render frame (if frame time is not yet exceeded)
+                    
    
     def spawn_decision(self, probability = 0.5):
         """
