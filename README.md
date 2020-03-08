@@ -8,7 +8,7 @@ A small 2d game based on the turtle library for the purpose  of self education i
 * Finite state machine (game states runninng, paused etc.)
 
 ### Python functionality
-* decorators (e.g. @property)
+* Function decorators (e.g. @property)
 * class methods (e.g. sprite spawning)
 
 ### Python standart libraries
