@@ -206,7 +206,7 @@ class Enemy(Sprite):
         self._value = 100
     
     @classmethod
-    def spawn(cls, game, distance = 200):
+    def spawn(cls, game, distance = 50):
         """ Spawns an object of type enemy """
         if len(game.enemies_tracker) < game.enemies_max_number:
             game.enemies_tracker.append(cls(game))

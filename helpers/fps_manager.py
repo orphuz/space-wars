@@ -2,10 +2,18 @@ import logging
 import time
 
 class Fps_manager():
-    def __init__(self, fps_value):
+    """
+    Ensures constant FPS by deciding if the next render shall take place
+    Usage:  1. Initiate classe object befor the beginning of the main loop
+            2. Call class method "update()" at the beginning for the main loop
+            3. Render frame if class method "decide to render()" retruns "True", otherwise drop it
+    """
+    def __init__(self, fps_value, max_frame_drops = 5):
+        """ Initiate timer values und frame_drop_counter """
         self.loop_delta = 1./fps_value
         self.current_time = self.target_time = time.perf_counter()
         self.frame_drop_counter = 0
+        self.max_frame_drops = max_frame_drops
 
     def update(self):
         """ Update timestams at the beginning of the main loop """

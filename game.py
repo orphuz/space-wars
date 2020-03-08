@@ -167,7 +167,7 @@ class Game():
 
     def main_loop(self):
         """ Run the main game """
-        render_manager = Fps_manager(self.config_values['game_fps'])
+        render_manager = Fps_manager(self.config_values['game_fps'], 5)
         
         while True:
 
