@@ -116,7 +116,8 @@ class Game():
         logging.debug("Key bindings successfully assigned ")
 
     def player_input(self, input):
-        """ Store the player input in the game objects _user_input variable """
+        """ Store the player input in a class variable so it can be processed later """
+        # TODO: Ensure that multiple inputs can be handled and none is lost
         logging.debug('Player input: {}'.format(input))
         self._user_input = input
 
@@ -176,7 +177,7 @@ class Game():
             self.process_input() # process user unput
             self.state.execution() # update frame
 
-            if render_manager.decide_to_render(): self.pen.screen.update() #render frame (if frame time is not yet exceeded)
+            render_manager.decide_to_render(self.pen.screen.update) #render frame (if frame time is not yet exceeded)
                     
    
     def spawn_decision(self, probability = 0.5):
