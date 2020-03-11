@@ -166,6 +166,11 @@ class Game():
                         if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
                         if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)
 
+                for powerup in self.powerups_tracker:
+                    #Check if player collects a power up
+                    if powerup.is_collision(enemy):
+                        powerup.despawn()
+
     def main_loop(self):
         """ Run the main game """
         render_manager = Fps_manager(self.config_values['game_fps'], 5)

@@ -213,7 +213,7 @@ class Enemy(Sprite):
             game.enemies_tracker[-1].random_position(game.player, distance)
             logging.debug('Enemy spawned - currently:{}/{} existing'.format(len(game.enemies_tracker), game.enemies_max_number))
         else:
-            logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(game.enemies_tracker), game.enemies_max_number))
+            logging.debug('Max number of enemies already existing - currently:{}/{} flying'.format(len(game.enemies_tracker), game.enemies_max_number))
 
     @property
     def value(self):
@@ -248,6 +248,6 @@ class Powerup(Sprite):
         if len(game.powerups_tracker) < game.powerups_max_number:
             game.powerups_tracker.append(cls(game, 'multi_shot'))
             game.powerups_tracker[-1].random_position(game.player, distance)
-            logging.debug('Enemy spawned - currently:{}/{} existing'.format(len(game.powerups_tracker), game.powerups_max_number))
+            logging.debug('Powerup spawned - currently:{}/{} existing'.format(len(game.powerups_tracker), game.powerups_max_number))
         else:
-            logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(game.powerups_tracker), game.powerups_max_number))
+            logging.debug('Max number of Powerup ups already existing - currently:{}/{}'.format(len(game.powerups_tracker), game.powerups_max_number))
