@@ -23,7 +23,7 @@ class State(object):
             logging.debug('Transition to {}'.format(self._transition_table[input]))
             eval(self._transition_table[input])
         else:
-            logging.warn('{} is not a valid option in state <{}>{}'.format(input, self.name, self.__class__))
+            logging.info('{} is not a valid option in state <{}>{}'.format(input, self.name, self.__class__))
             return self
 
 class Welcoming(State):

@@ -17,7 +17,7 @@ class Sprite(turtle.Turtle):
         self.screen.tracer(0)
         self.penup()
         self.radius = spritesize * 10
-        logging.debug("Instance of class {} created!".format(self.__class__))
+        logging.debug(f"Instance of {self.__class__} created")
 
     @property
     def xpos(self):
@@ -41,8 +41,8 @@ class Sprite(turtle.Turtle):
         try:
             self.object_tracker.remove(self)
         except ValueError as valerr:
-            logging.error(f'{valerr} - Cannot despawn {self} as it is not member of {self.object_tracker}')
-        logging.debug('Instance of class {} despawned - currently:{} existing'.format(self.__class__, len(self.object_tracker)))
+            logging.error(f'{valerr} - Cannot despawn {self}  {self.__class__} as it is not a member of {self.object_tracker}')
+        logging.debug(f'Instance of {self.__class__} despawned - currently:{len(self.object_tracker)} existing')
 
     def move(self):
         """ 
@@ -88,7 +88,7 @@ class Sprite(turtle.Turtle):
     def is_collision(self, other):
         """ Check for collision between self and given sprite <other> """
         if self.distance(other) <= (self.radius + other.radius):
-            logging.debug('Collision of <{0}> with <{1}> detected!'.format(self._name, other._name))
+            logging.debug(f'Collision of <{self._name}> with <{other._name}> detected!')
             return True
         else:
             return False
@@ -248,6 +248,6 @@ class Powerup(Sprite):
         if len(game.powerups_tracker) < game.powerups_max_number:
             game.powerups_tracker.append(cls(game, 'multi_shot'))
             game.powerups_tracker[-1].random_position(game.player, distance)
-            logging.debug('Powerup spawned - currently:{}/{} existing'.format(len(game.powerups_tracker), game.powerups_max_number))
+            logging.debug(f'<Powerup>  spawned - currently:{len(game.powerups_tracker)}/{game.powerups_max_number} existing')
         else:
-            logging.debug('Max number of Powerup ups already existing - currently:{}/{}'.format(len(game.powerups_tracker), game.powerups_max_number))
+            logging.debug(f'Max number of <Powerups> ups already existing - currently:{len(game.powerups_tracker)}/{game.powerups_max_number}')
