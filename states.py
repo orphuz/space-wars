@@ -75,6 +75,7 @@ class Running(State):
         # self.execution()
 
     def execution(self):
+        self.game.event_man.check_events()
         self.game.calculate_next_frame()
         self.game.draw_new_score()
 

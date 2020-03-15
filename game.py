@@ -22,6 +22,7 @@ import states
 class Game():
     def __init__(self, name):
         """ Main game class """
+        self.event_man = Event_man()
         self.config_values = self.load_config()
         self._highscorefile = "highscore.pickle"
         self.load_highscore()
