@@ -30,8 +30,16 @@ class Event_man():
             if event["trigger_time"] <= current_time:
                 event["event"]()
                 executed_events.append(event)
-                logging.warning(f"Timed event triggered, trigger time was{time.ctime(event['trigger_time'])}")
+                logging.debug(f"Timed event triggered, trigger time was{time.ctime(event['trigger_time'])}")
 
         for executed_event in executed_events:
             # Remove all executed events from the event register
             self._timed_events.remove(executed_event)
+
+    def delete_event(self, event):
+        """ Delete scheduled event provied as argument "event-object" from the register """
+        if event in self._timed_events:
+            self._timed_events.remove(event)
+            logging.debug(f"Event {event} removed from from list of scheduled events")
+        else:
+            logging.error(f"Event {event} not in list of scheduled events")
