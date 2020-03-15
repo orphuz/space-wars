@@ -24,6 +24,7 @@ class Game():
         self.config_values = self.load_config()
         self._highscorefile = "highscore.pickle"
         self.load_highscore()
+        self._new_score = False
         self._level = 1
         self._score = 0
         self._lives = self.config_values['player_lives']
@@ -286,7 +287,7 @@ class Game():
         logging.debug("Game field drawn")
 
     def draw_score(self):
-        """ Disply the self score """
+        """ Display the score """
         self._t_score.clear()
         msg_lives = f"Lives: {self._lives}"
         msg_score = f"Score: {self._score}"
@@ -305,6 +306,12 @@ class Game():
         self._t_score.write(msg_highscore, font=("Arial", 16, "normal"))
         logging.debug("Score drawn")
 
+    def draw_new_score(self):
+        """ Draws a new score if the new_score flag is set to True and resets the flag """
+        if self._new_score == True:
+            self._new_score = False
+            self.draw_score()
+
     def draw_welcome(self):
         """ Draw the welcome screen """
         self.draw_screen("SPACE WARS", 300, 300, "", "Press <Return> to start", "Press <ESC> to exit")
@@ -322,10 +329,10 @@ class Game():
 
     def update_score(self, modifier_lives, modifier_score):
         """ Update the game score based on the given modifiers and draw it to the canvas """
+        self._new_score = True
         self._lives += modifier_lives
         self._score += modifier_score
         if self._highscore < self._score: self._highscore = self._score
-        self.draw_score()
         if self._lives <= 0:    # check for player death
             self.state.transit('player_death')
 

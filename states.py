@@ -76,7 +76,7 @@ class Running(State):
 
     def execution(self):
         self.game.calculate_next_frame()
-
+        self.game.draw_new_score()
 
 class Paused(State):
     """ Paused Screen """
