@@ -15,6 +15,7 @@ from sprites import Powerup
 
 from helpers.game_config import Config
 from helpers.fps_manager import Fps_manager
+from helpers.event_man import Event_man
 
 import states
 
