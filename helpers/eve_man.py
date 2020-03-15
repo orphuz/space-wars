@@ -3,7 +3,7 @@ import time
 
 class Event_man():
     """
-    Lorem Ipsum
+    Store and manage scheduled events. If the target time reached the related function is called and the event itself is deleted
     """
 
     def __init__(self):
@@ -30,7 +30,7 @@ class Event_man():
             if event["trigger_time"] <= current_time:
                 event["event"]()
                 executed_events.append(event)
-                logging.debug(f"Timed event triggered, trigger time was{time.ctime(event['trigger_time'])}")
+                logging.debug(f"Timed event triggered, scheduled time was{time.ctime(event['trigger_time'])}")
 
         for executed_event in executed_events:
             # Remove all executed events from the event register
