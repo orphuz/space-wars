@@ -142,6 +142,10 @@ class Player(Sprite):
             #Start a timer
             pass
         self._powerup_type = input_powerup_type
+        self.game.event_man.add_timed_event(self.remove_buff, 3)
+
+    def remove_buff(self):
+        logging.warning(f"POWER UP REMOVED (...not really)")
 
     @classmethod
     def spawn(cls, game):

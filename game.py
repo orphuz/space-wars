@@ -14,8 +14,8 @@ from sprites import Missile
 from sprites import Powerup
 
 from helpers.game_config import Config
-from helpers.fps_manager import Fps_manager
-from helpers.event_man import Event_man
+from helpers.fps_man import Fps_manager
+from helpers.eve_man import Event_man
 
 import states
 

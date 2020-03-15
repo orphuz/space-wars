@@ -13,8 +13,7 @@ logging.basicConfig(filename = LOG_FILE,
 
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
-formatter = logging.Formatter('%(levelname)-8s %(message)s')
-console.setFormatter(formatter)
+console.setFormatter(logging.Formatter(LOG_FORMAT))
 logging.getLogger('').addHandler(console)
 
 game = game.Game("Space Wars")
