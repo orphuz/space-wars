@@ -263,5 +263,6 @@ class Powerup(Sprite):
 
     @classmethod
     def set_despawn_timer(cls, game):
-        game.event_man.add_timed_event(game.powerups_tracker[-1].despawn, 10)
-        pass
+        lifetime = random.randint(game.config_values['powerup_min_lifetime'], game.config_values['powerup_max_lifetime'])
+        game.event_man.add_timed_event(game.powerups_tracker[-1].despawn, lifetime)
+

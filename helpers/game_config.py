@@ -15,7 +15,9 @@ class Config():
             'player_turn_rate': 24,
             'enemy_speed': 2.5,
             'enemy_max_no': 3,
-            'missile_speed':10
+            'missile_speed': 10,
+            'powerup_min_lifetime': 5,
+            'powerup_max_lifetime': 30
         }
         self.config = configparser.ConfigParser()
         self._read_file()
@@ -40,7 +42,9 @@ class Config():
                 'player_turn_rate': self.config.getint('Current','player_turn_rate'),
                 'enemy_max_no': self.config.getint('Current','enemy_max_no'),
                 'enemy_speed': self.config.getfloat('Current','enemy_speed'),
-                'missile_speed':self.config.getint('Current','missile_speed')
+                'missile_speed':self.config.getint('Current','missile_speed'),
+                'powerup_min_lifetime':self.config.getint('Current','powerup_min_lifetime'),
+                'powerup_max_lifetime':self.config.getint('Current','powerup_max_lifetime')
             }
         except configparser.NoSectionError as err:
             logging.error("NoSectionError: {0}".format(err))
