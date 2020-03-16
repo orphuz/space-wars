@@ -17,8 +17,14 @@ class Event_man():
 
     def get_trigger_time(self, duration):
         """ Calculate the target trigger time based on the given duration """
-        trigger_time = time.time() + float(duration)
-        return trigger_time
+        try:
+            if duration > 0:
+                trigger_time = time.time() + float(duration)
+                return trigger_time
+            else:
+                raise ValueError(f"Argument 'duration' must be a number greater 0")
+        except TypeError as tyerr:
+            raise TypeError(f"{tyerr} - Arugment 'duration' must be a number")
 
     def check_events(self):
         """ Execute stored event function if corresponting "trigger_time" is reached / exceeded """
