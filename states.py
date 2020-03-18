@@ -48,7 +48,7 @@ class Welcoming(State):
         # self.execution()
 
     def execution(self):
-        self.game.wait_for_input(self)
+        self.game.wait_for_input()
 
 
 class Running(State):
@@ -99,7 +99,7 @@ class Paused(State):
         # self.execution()
 
     def execution(self):
-        self.game.wait_for_input(self)
+        self.game.wait_for_input()
 
 
 class Over(State):
@@ -117,14 +117,14 @@ class Over(State):
     def preperation(self):
         self.game.menu.clear_screen()
         self.game.despawn_all_sprites()
-        self.game.menu.over_screen(self.game._score, self.game._highscore)
-        self.game.save_highscore()
-        self.game._score = 0
+        self.game.menu.over_screen(self.game.score.current, self.game.score.highscore)
+        self.game.score.save_highscore()
+        self.game.score.reset_current()
         self.game._lives = self.game.config_values['player_lives']
         # self.execution()
 
     def execution(self):
-        self.game.wait_for_input(self)
+        self.game.wait_for_input()
 
 class Exit(State):
     """ Close turtle panel and exit the game application """

@@ -4,7 +4,6 @@ import turtle
 import logging
 import time
 import random
-import pickle
 
 from functools import partial
 
@@ -17,6 +16,7 @@ from helpers.game_config import Config
 from helpers.menu import Menu
 from helpers.fps_man import Fps_manager
 from helpers.eve_man import Event_man
+from helpers.score import Score
 
 import states
 
@@ -27,9 +27,7 @@ class Game():
         self.config_values = self.load_config()
         self.menu = Menu()
         self._highscorefile = "highscore.pickle"
-        self._highscore = self.load_highscore()
-        self._score = 0
-        self._new_score = False
+        self.score = Score(self._highscorefile)
         self._level = 1
         self._lives = self.config_values['player_lives']
 
@@ -133,13 +131,9 @@ class Game():
             self._user_input = None
             self.state.transit(current_input)
 
-    def wait_for_input(self, state):
+    def wait_for_input(self):
         """ wait for input of player by essentially doing nothing """
         pass
-        # while self.state == state:
-        #     logging.debug('self {} - Waiting for player input'.format(self.state.name))
-        #     self.pen.screen.update() # includes the check for key press
-        #     time.sleep(0.1) # Slow down main loop
 
     def calculate_next_frame(self):
         """
@@ -159,12 +153,12 @@ class Game():
                 if self.player.is_collision(enemy):
                     enemy.despawn()
                     Enemy.spawn(self)
-                    self.update_score(-1, 0) #remove 1 live
+                    self.update_lives(-1) #remove 1 live
 
                 for missile in self.player.missiles_shot:
                     # Check for collision with all missles shot
                     if missile.is_collision(enemy):
-                        self.update_score(0, enemy.value) #add 10 to score
+                        self.score.update_current(enemy.value) #add 10 to score
                         enemy.despawn()
                         missile.despawn()
                         Enemy.spawn(self)
@@ -257,8 +251,8 @@ class Game():
         """ Display the score """
         self._t_score.clear()
         msg_lives = f"Lives: {self._lives}"
-        msg_score = f"Score: {self._score}"
-        msg_highscore = f"High Score: {self._highscore}"
+        msg_score = f"Score: {self.score.current}"
+        msg_highscore = f"High Score: {self.score.highscore}"
         self._t_score.penup()
         self._t_score.goto(- int(float(self.config_values['field_width']) / 2), int(float(self.config_values['field_height']) / 2 + 10))
         self._t_score.pendown()
@@ -275,39 +269,18 @@ class Game():
 
     def draw_new_score(self):
         """ Draws a new score if the new_score flag is set to True and resets the flag """
-        if self._new_score == True:
-            self._new_score = False
+        if self.score.is_new == True:
             self.draw_score()
+            self.score.be_old()
 
-    def update_score(self, modifier_lives, modifier_score):
-        """ Update the game score based on the given modifiers and draw it to the canvas """
-        self._new_score = True
+    def update_lives(self, modifier_lives):
         self._lives += modifier_lives
-        self._score += modifier_score
-        if self._highscore < self._score: self._highscore = self._score
         if self._lives <= 0:    # check for player death
-            self.state.transit('player_death')
+                self.state.transit('player_death')
 
-    def load_highscore(self):
-        """ Try to load a high score value from a pickel. If it fails, sets high score to 0 """
-        try:
-            highscore = pickle.load( open( self._highscorefile, "rb" ) )
-        except IOError as ioerr:
-            logging.warn(f"{ioerr} - No pickled high score found, creating new with integer value 0")
-            pickle.dump(int(0), open(self._highscorefile, "wb" ) )
-            highscore = 0
-        finally:
-            return highscore
-
-    def save_highscore(self):
-        """ Save high score to pickle file """
-        pickle.dump( self._highscore, open( self._highscorefile, "wb" ) )
-
-    def reset_highscore(self):
-        """ Reset high score value to 0 and refresh screen """
-        self._highscore = 0
-        self.save_highscore()
-        self.state.preperation()
+    def reset_high_score(self):
+        self.score.reset_highscore()
+        self.state.preperation()  
 
     def exit(self):
         """ Close turtle panel and exit the self application """
