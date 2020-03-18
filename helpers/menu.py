@@ -2,10 +2,9 @@ import logging
 import turtle
 
 class Menu(object):
-    def __init__(self, game):
+    def __init__(self):
         self.screen_width = 300
         self.screen_height = 300
-        self.game = game
         self.pen = turtle.Turtle(visible = False)
         self.pen.screen.tracer(0)
         self.pen.color('white')

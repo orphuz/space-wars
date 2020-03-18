@@ -25,12 +25,12 @@ class Game():
         """ Main game class """
         self.event_man = Event_man()
         self.config_values = self.load_config()
-        self.menu = Menu(self)
+        self.menu = Menu()
         self._highscorefile = "highscore.pickle"
         self._highscore = self.load_highscore()
+        self._score = 0
         self._new_score = False
         self._level = 1
-        self._score = 0
         self._lives = self.config_values['player_lives']
 
         self._user_input = None
