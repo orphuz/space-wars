@@ -4,7 +4,7 @@ import logging
 class Config():
     def __init__(self):
         ''' Manage the game configuration with an external config file '''
-        self._config_file = "config.ini"
+        self._config_file = "data/config.ini"
         self._DEFAULTVALUES = {
             'game_fps' : 60,
             'field_width' : 600,
