@@ -14,6 +14,7 @@ from sprites import Missile
 from sprites import Powerup
 
 from helpers.game_config import Config
+from helpers.menu import Menu
 from helpers.fps_man import Fps_manager
 from helpers.eve_man import Event_man
 
@@ -24,8 +25,9 @@ class Game():
         """ Main game class """
         self.event_man = Event_man()
         self.config_values = self.load_config()
+        self.menu = Menu(self)
         self._highscorefile = "highscore.pickle"
-        self.load_highscore()
+        self._highscore = self.load_highscore()
         self._new_score = False
         self._level = 1
         self._score = 0
@@ -230,43 +232,6 @@ class Game():
             sprite.st()
         logging.debug('All sprites made visible')
 
-    def draw_screen(self, title, height, width, text_01 = "", text_02 = "", text_03 = ""):
-        """ Template function to draw self screens """
-        self.pen.clear()
-        self.pen.penup()
-        self.pen.setheading(0)
-        self.pen.goto(- height / 2, width / 2)
-        self.pen.pendown()
-        self.pen.fd(width)
-        self.pen.rt(90)
-        self.pen.fd(height)
-        self.pen.rt(90)
-        self.pen.fd(width)
-        self.pen.rt(90)
-        self.pen.fd(height)
-        self.pen.penup()
-        self.pen.goto(0, 60)
-        self.pen.pendown()
-        self.pen.write(title, font=("Arial", 28, "normal"), align = 'center')
-        self.pen.penup()
-        if text_01 != "":
-            self.pen.goto(0, -30)
-            self.pen.pendown()
-            self.pen.write(text_01, font=("Arial", 12, "normal"), align = 'center')
-            self.pen.penup()
-        if text_02 != "":
-            self.pen.goto(- width / 2 + 10 , - height /2 + 30)
-            self.pen.pendown()
-            self.pen.write(text_02, font=("Arial", 12, "normal"), align = 'left')
-            self.pen.penup()
-        if text_03 != "":
-            self.pen.goto(- width / 2 + 10 , - height /2 + 10)
-            self.pen.pendown()
-            self.pen.write(text_03, font=("Arial", 12, "normal"), align = 'left')
-            self.pen.penup()
-        self.pen.screen.update()
-        logging.debug("<{}> screen drawn".format(title))
-
     def draw_field(self):
         """
         Draw border of the game field
@@ -314,21 +279,6 @@ class Game():
             self._new_score = False
             self.draw_score()
 
-    def draw_welcome(self):
-        """ Draw the welcome screen """
-        self.draw_screen("SPACE WARS", 300, 300, "", "Press <Return> to start", "Press <ESC> to exit")
-        logging.debug('Welcome screen drawn')
-
-    def draw_pause(self):
-        self.draw_screen("GAME PAUSED", 300, 300, "", "Press <Return> to continue", "Press <ESC> to go to start screen")
-
-    def draw_over(self):
-        """ Draw game over screen """
-        #TODO: Create notification about a newly set highscore, e.g. by comparing to currently pickled high score (=last high score)
-        self.draw_screen("GAME OVER", 300, 300, f"Your final score: {self._score}\n\nHighscore: {self._highscore}", "Press <Return> to continue", "Press <ESC> to exit")
-        self.save_highscore()
-        logging.debug('Welcome screen drawn')
-
     def update_score(self, modifier_lives, modifier_score):
         """ Update the game score based on the given modifiers and draw it to the canvas """
         self._new_score = True
@@ -347,7 +297,7 @@ class Game():
             pickle.dump(int(0), open(self._highscorefile, "wb" ) )
             highscore = 0
         finally:
-            self._highscore = highscore
+            return highscore
 
     def save_highscore(self):
         """ Save high score to pickle file """

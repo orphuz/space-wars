@@ -41,9 +41,10 @@ class Welcoming(State):
         self.preperation()
        
     def preperation(self):
+        self.game.menu.clear_screen()
         self.game.spawn_all_sprites()
         self.game.hide_sprites()
-        self.game.draw_welcome()
+        self.game.menu.welcome_screen()
         # self.execution()
 
     def execution(self):
@@ -68,6 +69,7 @@ class Running(State):
         State.__init__(self, game, 'running')
         
     def preperation(self):
+        self.game.menu.clear_screen()
         self.game.draw_field()
         self.game.draw_score()
         self.game.show_sprites()
@@ -91,8 +93,9 @@ class Paused(State):
         State.__init__(self, game, 'paused')
         
     def preperation(self):
+        self.game.menu.clear_screen()
         self.game.hide_sprites()
-        self.game.draw_pause()
+        self.game.menu.pause_screen()
         # self.execution()
 
     def execution(self):
@@ -112,8 +115,10 @@ class Over(State):
         State.__init__(self, game, 'over')
         
     def preperation(self):
+        self.game.menu.clear_screen()
         self.game.despawn_all_sprites()
-        self.game.draw_over()
+        self.game.menu.over_screen(self.game._score, self.game._highscore)
+        self.game.save_highscore()
         self.game._score = 0
         self.game._lives = self.game.config_values['player_lives']
         # self.execution()
@@ -131,6 +136,7 @@ class Exit(State):
         
     def preperation(self):
         # self.execution()
+        self.game.menu.clear_screen()
         pass
 
     def execution(self):
