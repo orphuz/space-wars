@@ -170,9 +170,9 @@ class Game():
                     if powerup.is_collision(enemy):
                         powerup.despawn()
 
-    def main_loop(self):
+    def main_loop(self, testmode = False):
         """ Run the main game """
-        render_manager = Fps_manager(self.config_values['game_fps'], 5)
+        if 'render_manager' not in locals():  render_manager = Fps_manager(self.config_values['game_fps'], 5) # Condition for testing purpose
         
         while True:
 
@@ -182,7 +182,8 @@ class Game():
             self.state.execution() # update frame
 
             render_manager.decide_to_render(self.pen.screen.update) #render frame (if frame time is not yet exceeded)
-                    
+
+            if testmode: return      
    
     def spawn_decision(self, probability = 0.5):
         """
