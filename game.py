@@ -288,7 +288,8 @@ class Game():
         self.state = self.exiting
         logging.warn("Exiting python program via turtle")
         self.pen.screen.bye
-        sys.exit()
+        raise SystemExit
+        #sys.exit()
 
     def custom_action(self):
         """ Custom action trigger vie key press - currently "c" """

@@ -3,7 +3,7 @@ import unittest
 from game import Game
 
 
-class Test_01_Game_States(unittest.TestCase):
+class Test_01_Game_State_Transitions(unittest.TestCase):
     """ 
     Check all possible game states and transitons based on user input
     """
@@ -20,57 +20,58 @@ class Test_01_Game_States(unittest.TestCase):
     def tearDown(self):
         """ Delete the game instance after every test execution"""
         self.game.set_state(self.game.exiting)
+        del self.game
 
     def test_01_start_in_welcoming(self):
         """ Check if game starts up in to state <welconing> """
         self.assertEqual(self.game.state, self.game.welcoming)
 
-    def test_02_transition_welcoming_to_running(self):
+    def test_02_transition_from_welcoming_to_running(self):
         """ Check game state transition from <welconing> to <running> on user input <confirm> """
         self.test_01_start_in_welcoming()
         self.game.player_input("confirm")
         self.game.main_loop(testmode = True)
         self.assertEqual(self.game.state, self.game.running)
     
-    def test_03_transition_running_to_pause(self):
+    def test_03_transition_from_running_to_pause(self):
         """ Check game state transition from <running> to <paused> on user input <cancel> """
-        self.test_02_transition_welcoming_to_running()
+        self.test_02_transition_from_welcoming_to_running()
         self.game.player_input("cancel")
         self.game.main_loop(testmode = True)
         self.assertEqual(self.game.state, self.game.paused)
 
-    def test_04_transition_paused_to_running(self):
+    def test_04_transition_from_paused_to_running(self):
         """ Check game state transition from <paused> to <running> on user input <confirm> """
-        self.test_03_transition_running_to_pause()
+        self.test_03_transition_from_running_to_pause()
         self.game.player_input("confirm")
         self.game.main_loop(testmode = True)
         self.assertEqual(self.game.state, self.game.running)
 
-    def test_05_transition_paused_to_over(self):
+    def test_05_transition_from_paused_to_over(self):
         """ Check game state transition from <paused> to <over> on user input <cancel> """
-        self.test_03_transition_running_to_pause()
+        self.test_03_transition_from_running_to_pause()
         self.game.player_input("cancel")
         self.game.main_loop(testmode = True)
         self.assertEqual(self.game.state, self.game.over)
     
-    def test_06_transition_over_to_welcoming(self):
+    def test_06_transition_from_over_to_welcoming(self):
         """ Check game state transition from <over> to <welcoming> on user input <confirm> """
-        self.test_05_transition_paused_to_over()
+        self.test_05_transition_from_paused_to_over()
         self.game.player_input("confirm")
         self.game.main_loop(testmode = True)
         self.assertEqual(self.game.state, self.game.welcoming)
 
-    def test_07_transition_over_to_reset_score(self):
+    def test_07_transition_from_over_to_reset_score(self):
         """ Check game state transition from <over> to <over> while reseting the high score on user input <custom> """
-        self.test_05_transition_paused_to_over()
+        self.test_05_transition_from_paused_to_over()
         self.game.player_input("custom")
         self.game.main_loop(testmode = True)
         self.assertEqual(self.game.state, self.game.over)
         self.assertEqual(self.game.score.highscore, 0)
 
-    def test_08_menu_transition_to_exiting(self):
+    def test_08_transition_from_over_to_exiting(self):
         """ Check that game is exited after state transition from <over> to <exiting> on user input <cancel> """
-        self.test_05_transition_paused_to_over()
+        self.test_05_transition_from_paused_to_over()
         self.game.player_input("cancel")      
         with self.assertRaises(SystemExit):
             self.game.main_loop(testmode = True)
@@ -96,6 +97,7 @@ class Test_02_Game_Inputs(unittest.TestCase):
     def tearDown(self):
         """ Delete the game instance after every test execution"""
         self.game.set_state(self.game.exiting)
+        del self.game
 
     def test_01_player_turn_left(self):
         """ Check if player sprite heading direction is changed corretly on input <turn_left> """
@@ -147,7 +149,7 @@ class Test_02_Game_Inputs(unittest.TestCase):
     
     def test_06_custom_action(self):
         """
-        Check if custom action is triggered correctly on user input <custop>
+        Check if custom action is triggered correctly on user input <custom>
         Current custom action: Randomly spawn a power up
         - Number of active powerups is increased by 1
         - New object of type <Power-up> is spawned
@@ -158,4 +160,48 @@ class Test_02_Game_Inputs(unittest.TestCase):
         self.game.main_loop(testmode = True)
         current_number_of_powerups = len(self.game.powerups_tracker)
         self.assertEqual(current_number_of_powerups, previous_number_of_powerups + 1)
-        self.assertIsInstance(self.game.powerups_tracker[-1], Powerup)          
+        self.assertIsInstance(self.game.powerups_tracker[-1], Powerup)
+
+class Test_03_Game_Collisions(unittest.TestCase):
+    """ 
+    Check all possible reactions to collisions of sprites while the game is running
+    """
+
+    def setUp(self):
+        """
+        Inistanciate an instance of the game,
+        start running the main loop in test mode (only one iteration) and
+        transit to game state <running>
+        before every test execution
+        """
+        self.game = Game("Test Space Wars")
+        self.game.main_loop(testmode = True)
+        self.game.player_input("confirm")
+        self.game.main_loop(testmode = True)
+
+    def tearDown(self):
+        """ Delete the game instance after every test execution"""
+        self.game.set_state(self.game.exiting)
+        del self.game
+
+    def test_01_collision_of_player_with_enemy_lose_life(self):
+        """
+        Check if a life is lost when the <player> collides with an <enemy> sprite
+        """
+        previous_lives = self.game._lives = 2
+        self.game.enemies_tracker[-1].setpos(self.game.player.xpos, self.game.player.ypos)
+        self.game.main_loop(testmode = True)
+        self.assertEqual(self.game._lives, previous_lives - 1)
+    
+    def test_02_collision_of_player_with_enemy_despawn_enemy(self):
+        """
+        Check if the <enemy> is despawend when the <player> collides with the <enemy> sprite
+        """
+        colliding_enemy_id = id(self.game.enemies_tracker[-1])
+        self.game.enemies_tracker[-1].setpos(self.game.player.xpos, self.game.player.ypos)
+        self.game.main_loop(testmode = True)
+        current_enemy_ids = []
+        for enemy in self.game.enemies_tracker:
+            current_enemy_ids.append(id(enemy))
+        self.assertNotIn(colliding_enemy_id, current_enemy_ids)
+
