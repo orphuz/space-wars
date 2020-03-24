@@ -23,6 +23,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get install python3-tk
+        sudo apt-get install xvfb
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade pip
 #         # pip install -r requirements.txt
@@ -36,7 +37,7 @@ jobs:
         
     # Runs a single command using the runners shell
     - name: Execute all unit tests
-      run: python3 -m unittest discover -s 'tests'
+      run: xvfb-run python3 -m unittest discover -s 'tests'
 
     # Runs a set of commands using the runners shell
     - name: Check test coverage
