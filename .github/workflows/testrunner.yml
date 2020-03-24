@@ -16,14 +16,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
         python-version: 3.7
     - name: Install dependencies
       run: |
         sudo apt-get install python3-tk
-        python -m pip install --upgrade pip
+        python3 -m pip install --upgrade pip
+        python3 -m pip install --upgrade pip
 #         # pip install -r requirements.txt
     - name: Lint with flake8
       run: |
@@ -35,11 +36,12 @@ jobs:
         
     # Runs a single command using the runners shell
     - name: Execute all unit tests
-      run: python -m unittest discover -s 'tests'
+      run: python3 -m unittest discover -s 'tests'
 
     # Runs a set of commands using the runners shell
     - name: Check test coverage
       run: |
+        pip install coverage
         coverage run -m unittest discover -s 'tests'
         coverage report
         coverage html
