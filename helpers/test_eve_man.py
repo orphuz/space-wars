@@ -20,12 +20,12 @@ class Test_Event_man(unittest.TestCase):
             pass
         self.t_event_man.add_timed_event(t_function, t_duration)
         self.assertEqual(self.t_event_man._timed_events[-1]["event"], t_function)
-        self.assertAlmostEqual(self.t_event_man._timed_events[-1]["trigger_time"], self.t_event_man.get_trigger_time(t_duration), places = 4,)
+        self.assertAlmostEqual(self.t_event_man._timed_events[-1]["trigger_time"], self.t_event_man.get_trigger_time(t_duration), places = 2)
 
     def test_get_trigger_time(self):
         t_duration = 12
         t_tirgger_time = t_duration + time.time()
-        self.assertAlmostEqual(t_tirgger_time, self.t_event_man.get_trigger_time(t_duration))
+        self.assertAlmostEqual(t_tirgger_time, self.t_event_man.get_trigger_time(t_duration), places = 2)
     
     def test_get_trigger_time_with_invalid_type(self):
         t_wrong_type_duration = 'thisIsnotANumberButAString'
