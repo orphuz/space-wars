@@ -48,7 +48,7 @@ jobs:
         coverage html
     
     - name: Archive code coverage results
-        uses: actions/upload-artifact@v1
-        with:
-          name: code-coverage-report
-          path: htmlcov
+      uses: actions/upload-artifact@v1
+      with:
+        name: code-coverage-report
+        path: htmlcov
