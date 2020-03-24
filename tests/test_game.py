@@ -105,6 +105,7 @@ class Test_02_Game_Inputs(unittest.TestCase):
         self.game.player_input("left")
         self.game.main_loop(testmode = True)
         new_direction = previous_direction + self.game.config_values["player_turn_rate"]
+        if new_direction >= 360: new_direction -= 360
         self.assertEqual(self.game.player.heading(), new_direction )
 
     def test_02_player_turn_right(self):
@@ -113,6 +114,7 @@ class Test_02_Game_Inputs(unittest.TestCase):
         self.game.player_input("right")
         self.game.main_loop(testmode = True)
         new_direction = previous_direction - self.game.config_values["player_turn_rate"]
+        if new_direction < 0: new_direction += 360
         self.assertEqual(self.game.player.heading(), new_direction )
 
     def test_03_player_accelerate(self):
