@@ -22,6 +22,10 @@ A small 2d game based on the turtle library for the purpose  of self education i
 * turtle
 
 
+# Dependencies
+* Python3
+* Pyhton3-TK
+
 
 
 
