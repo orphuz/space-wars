@@ -23,7 +23,7 @@ class State(object):
             logging.debug('Transition to {}'.format(self._transition_table[input]))
             eval(self._transition_table[input])
         else:
-            logging.warn('{} is not a valid option in state <{}>{}'.format(input, self.name, self.__class__))
+            logging.info('{} is not a valid option in state <{}>{}'.format(input, self.name, self.__class__))
             return self
 
 class Welcoming(State):
@@ -41,13 +41,14 @@ class Welcoming(State):
         self.preperation()
        
     def preperation(self):
+        self.game.menu.clear_screen()
         self.game.spawn_all_sprites()
         self.game.hide_sprites()
-        self.game.draw_welcome()
+        self.game.menu.welcome_screen()
         # self.execution()
 
     def execution(self):
-        self.game.wait_for_input(self)
+        self.game.wait_for_input()
 
 
 class Running(State):
@@ -68,6 +69,7 @@ class Running(State):
         State.__init__(self, game, 'running')
         
     def preperation(self):
+        self.game.menu.clear_screen()
         self.game.draw_field()
         self.game.draw_score()
         self.game.show_sprites()
@@ -75,8 +77,9 @@ class Running(State):
         # self.execution()
 
     def execution(self):
+        self.game.event_man.check_events()
         self.game.calculate_next_frame()
-
+        self.game.draw_new_score()
 
 class Paused(State):
     """ Paused Screen """
@@ -90,19 +93,20 @@ class Paused(State):
         State.__init__(self, game, 'paused')
         
     def preperation(self):
+        self.game.menu.clear_screen()
         self.game.hide_sprites()
-        self.game.draw_pause()
+        self.game.menu.pause_screen()
         # self.execution()
 
     def execution(self):
-        self.game.wait_for_input(self)
+        self.game.wait_for_input()
 
 
 class Over(State):
     """ Game over Screen """
     
     _transition_table = {
-        "custom": "self.game.reset_highscore()",
+        "custom": "self.game.score.reset_highscore()",
         "confirm": "self.game.set_state(self.game.welcoming)",
         "cancel": "self.game.set_state(self.game.exiting)"    
     }
@@ -111,14 +115,16 @@ class Over(State):
         State.__init__(self, game, 'over')
         
     def preperation(self):
+        self.game.menu.clear_screen()
         self.game.despawn_all_sprites()
-        self.game.draw_over()
-        self.game._score = 0
+        self.game.menu.over_screen(self.game.score.current, self.game.score.highscore)
+        self.game.score.save_highscore()
+        self.game.score.reset_current()
         self.game._lives = self.game.config_values['player_lives']
         # self.execution()
 
     def execution(self):
-        self.game.wait_for_input(self)
+        self.game.wait_for_input()
 
 class Exit(State):
     """ Close turtle panel and exit the game application """
@@ -130,6 +136,7 @@ class Exit(State):
         
     def preperation(self):
         # self.execution()
+        self.game.menu.clear_screen()
         pass
 
     def execution(self):

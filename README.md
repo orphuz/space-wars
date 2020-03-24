@@ -22,6 +22,25 @@ A small 2d game based on the turtle library for the purpose  of self education i
 * turtle
 
 
+# Dependencies
+* Python3
+* Pyhton3-TK
+* pip install coverage
+
+## How to:
+### Run all tests from project folder
+```
+python -m unittest discover -s 'tests'
+```
+
+### Calculate and report test coverage
+```
+coverage run -m unittest discover -s 'tests'
+coverage report
+coverage html
+```
+
+
 
 
 

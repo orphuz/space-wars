@@ -4,7 +4,6 @@ import turtle
 import logging
 import time
 import random
-import pickle
 
 from functools import partial
 
@@ -13,20 +12,24 @@ from sprites import Enemy
 from sprites import Missile
 from sprites import Powerup
 
+from helpers.game_config import Config
+from helpers.menu import Menu
+from helpers.fps_man import Fps_manager
+from helpers.eve_man import Event_man
+from helpers.score import Score
+
 import states
-import game_config
 
 class Game():
     def __init__(self, name):
         """ Main game class """
-        self.name = name
+        self.event_man = Event_man()
         self.config_values = self.load_config()
-        self._highscorefile = "highscore.pickle"
-        self.load_highscore()
+        self.menu = Menu()
+        self._highscorefile = "data/highscore.pickle"
+        self.score = Score(self._highscorefile)
         self._level = 1
-        self._score = 0
         self._lives = self.config_values['player_lives']
-        self.loop_delta = 1./self.config_values['game_fps'] #calculate loop time based on fixed FPS value
 
         self._user_input = None
 
@@ -90,7 +93,7 @@ class Game():
 
     def load_config(self):
         """ Load self config from the config file """
-        config = game_config.Config()
+        config = Config()
         logging.debug("self config loaded")
         return config.current_values        
 
@@ -116,7 +119,8 @@ class Game():
         logging.debug("Key bindings successfully assigned ")
 
     def player_input(self, input):
-        """ Store the player input in the game objects _user_input variable """
+        """ Store the player input in a class variable so it can be processed later """
+        # TODO: Ensure that multiple inputs can be handled and none is lost
         logging.debug('Player input: {}'.format(input))
         self._user_input = input
 
@@ -127,13 +131,9 @@ class Game():
             self._user_input = None
             self.state.transit(current_input)
 
-    def wait_for_input(self, state):
+    def wait_for_input(self):
         """ wait for input of player by essentially doing nothing """
         pass
-        # while self.state == state:
-        #     logging.debug('self {} - Waiting for player input'.format(self.state.name))
-        #     self.pen.screen.update() # includes the check for key press
-        #     time.sleep(0.1) # Slow down main loop
 
     def calculate_next_frame(self):
         """
@@ -153,47 +153,37 @@ class Game():
                 if self.player.is_collision(enemy):
                     enemy.despawn()
                     Enemy.spawn(self)
-                    self.update_score(-1, 0) #remove 1 live
+                    self.update_lives(-1) #remove 1 live
 
                 for missile in self.player.missiles_shot:
                     # Check for collision with all missles shot
                     if missile.is_collision(enemy):
-                        self.update_score(0, enemy.value) #add 10 to score
+                        self.score.update_current(enemy.value) #add 10 to score
                         enemy.despawn()
                         missile.despawn()
                         Enemy.spawn(self)
                         if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
                         if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)
 
-    def main_loop(self):
-        """ Run the main game """
-        current_time = target_time = time.perf_counter()
-        frame_drop_counter = 0
+                for powerup in self.powerups_tracker:
+                    #Check if player collects a power up
+                    if powerup.is_collision(enemy):
+                        powerup.despawn()
 
+    def main_loop(self, testmode = False):
+        """ Run the main game """
+        if 'render_manager' not in locals():  render_manager = Fps_manager(self.config_values['game_fps'], 5) # Condition for testing purpose
+        
         while True:
 
-            self.previous_time, current_time = current_time, time.perf_counter() #update relative timestamps
+            render_manager.update()
 
-            self.process_input()
+            self.process_input() # process user unput
+            self.state.execution() # update frame
 
-            self.state.execution()
-                     
-            #### sleep management to achieve constant FPS
-            target_time += self.loop_delta
-            sleep_time = target_time - time.perf_counter()
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-                if frame_drop_counter > 0 :
-                    frame_drop_counter -= 1
-                        
-                self.pen.screen.update()
-                
-            else:
-                frame_drop_counter += 1
-                logging.warning(f"Dropping frame update: Execution of main loop took {abs(sleep_time):.6f}s too long - happend {frame_drop_counter} time(s)")
-                if frame_drop_counter > 5:
-                    logging.error("Dropped more than five frames in a row - force updating screen now")
-                    self.pen.screen.update()
+            render_manager.decide_to_render(self.pen.screen.update) #render frame (if frame time is not yet exceeded)
+
+            if testmode: return      
    
     def spawn_decision(self, probability = 0.5):
         """
@@ -237,43 +227,6 @@ class Game():
             sprite.st()
         logging.debug('All sprites made visible')
 
-    def draw_screen(self, title, height, width, text_01 = "", text_02 = "", text_03 = ""):
-        """ Template function to draw self screens """
-        self.pen.clear()
-        self.pen.penup()
-        self.pen.setheading(0)
-        self.pen.goto(- height / 2, width / 2)
-        self.pen.pendown()
-        self.pen.fd(width)
-        self.pen.rt(90)
-        self.pen.fd(height)
-        self.pen.rt(90)
-        self.pen.fd(width)
-        self.pen.rt(90)
-        self.pen.fd(height)
-        self.pen.penup()
-        self.pen.goto(0, 60)
-        self.pen.pendown()
-        self.pen.write(title, font=("Arial", 28, "normal"), align = 'center')
-        self.pen.penup()
-        if text_01 != "":
-            self.pen.goto(0, -30)
-            self.pen.pendown()
-            self.pen.write(text_01, font=("Arial", 12, "normal"), align = 'center')
-            self.pen.penup()
-        if text_02 != "":
-            self.pen.goto(- width / 2 + 10 , - height /2 + 30)
-            self.pen.pendown()
-            self.pen.write(text_02, font=("Arial", 12, "normal"), align = 'left')
-            self.pen.penup()
-        if text_03 != "":
-            self.pen.goto(- width / 2 + 10 , - height /2 + 10)
-            self.pen.pendown()
-            self.pen.write(text_03, font=("Arial", 12, "normal"), align = 'left')
-            self.pen.penup()
-        self.pen.screen.update()
-        logging.debug("<{}> screen drawn".format(title))
-
     def draw_field(self):
         """
         Draw border of the game field
@@ -296,11 +249,11 @@ class Game():
         logging.debug("Game field drawn")
 
     def draw_score(self):
-        """ Disply the self score """
+        """ Display the score """
         self._t_score.clear()
         msg_lives = f"Lives: {self._lives}"
-        msg_score = f"Score: {self._score}"
-        msg_highscore = f"High Score: {self._highscore}"
+        msg_score = f"Score: {self.score.current}"
+        msg_highscore = f"High Score: {self.score.highscore}"
         self._t_score.penup()
         self._t_score.goto(- int(float(self.config_values['field_width']) / 2), int(float(self.config_values['field_height']) / 2 + 10))
         self._t_score.pendown()
@@ -315,57 +268,28 @@ class Game():
         self._t_score.write(msg_highscore, font=("Arial", 16, "normal"))
         logging.debug("Score drawn")
 
-    def draw_welcome(self):
-        """ Draw the welcome screen """
-        self.draw_screen("SPACE WARS", 300, 300, "", "Press <Return> to start", "Press <ESC> to exit")
-        logging.debug('Welcome screen drawn')
+    def draw_new_score(self):
+        """ Draws a new score if the new_score flag is set to True and resets the flag """
+        if self.score.is_new == True:
+            self.draw_score()
+            self.score.be_old()
 
-    def draw_pause(self):
-        self.draw_screen("GAME PAUSED", 300, 300, "", "Press <Return> to continue", "Press <ESC> to go to start screen")
-
-    def draw_over(self):
-        """ Draw game over screen """
-        #TODO: Create notification about a newly set highscore, e.g. by comparing to currently pickled high score (=last high score)
-        self.draw_screen("GAME OVER", 300, 300, f"Your final score: {self._score}\n\nHighscore: {self._highscore}", "Press <Return> to continue", "Press <ESC> to exit")
-        self.save_highscore()
-        logging.debug('Welcome screen drawn')
-
-    def update_score(self, modifier_lives, modifier_score):
-        """ Update the game score based on the given modifiers and draw it to the canvas """
+    def update_lives(self, modifier_lives):
         self._lives += modifier_lives
-        self._score += modifier_score
-        if self._highscore < self._score: self._highscore = self._score
-        self.draw_score()
         if self._lives <= 0:    # check for player death
-            self.state.transit('player_death')
+                self.state.transit('player_death')
 
-    def load_highscore(self):
-        """ Try to load a high score value from a pickel. If it fails, sets high score to 0 """
-        try:
-            highscore = pickle.load( open( self._highscorefile, "rb" ) )
-        except IOError as ioerr:
-            logging.warn(f"{ioerr} - No pickled high score found, creating new with integer value 0")
-            pickle.dump(int(0), open(self._highscorefile, "wb" ) )
-            highscore = 0
-        finally:
-            self._highscore = highscore
-
-    def save_highscore(self):
-        """ Save high score to pickle file """
-        pickle.dump( self._highscore, open( self._highscorefile, "wb" ) )
-
-    def reset_highscore(self):
-        """ Reset high score value to 0 and refresh screen """
-        self._highscore = 0
-        self.save_highscore()
-        self.state.preperation()
+    def reset_high_score(self):
+        self.score.reset_highscore()
+        self.state.preperation()  
 
     def exit(self):
         """ Close turtle panel and exit the self application """
         self.state = self.exiting
         logging.warn("Exiting python program via turtle")
         self.pen.screen.bye
-        sys.exit()
+        raise SystemExit
+        #sys.exit()
 
     def custom_action(self):
         """ Custom action trigger vie key press - currently "c" """
