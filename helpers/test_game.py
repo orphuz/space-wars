@@ -204,4 +204,47 @@ class Test_03_Game_Collisions(unittest.TestCase):
         for enemy in self.game.enemies_tracker:
             current_enemy_ids.append(id(enemy))
         self.assertNotIn(colliding_enemy_id, current_enemy_ids)
-
+    
+    def test_03_collision_of_player_with_powerup_despawn_powerup(self):
+        """
+        Check if the <powerup> is despawend when the <player> collides with it's sprite
+        """
+        from sprites import Powerup
+        Powerup.spawn(self.game)
+        colliding_powerup_id = id(self.game.powerups_tracker[-1])
+        self.game.powerups_tracker[-1].setpos(self.game.player.xpos, self.game.player.ypos)
+        self.game.main_loop(testmode = True)
+        current_powerup_ids = []
+        for powerup in self.game.enemies_tracker:
+            current_powerup_ids.append(id(powerup))
+        self.assertNotIn(colliding_powerup_id, current_powerup_ids)
+    
+    def test_04_collision_of_bullet_with_enemy_despawn_enemy(self):
+        """
+        Check if the <enemy> is despawend when the <missile> collides with it's sprite
+        """
+        self.game.player_input("fire")
+        self.game.main_loop(testmode = True)
+        colliding_enemy = self.game.enemies_tracker[-1]
+        colliding_missile = self.game.player.missiles_shot[-1]
+        colliding_enemy.setpos(colliding_missile.xpos, colliding_missile.ypos)
+        self.game.main_loop(testmode = True)
+        current_enemy_ids = []
+        for enemy in self.game.enemies_tracker:
+            current_enemy_ids.append(id(enemy))
+        self.assertNotIn(id(colliding_enemy), current_enemy_ids)
+    
+    def test_05_collision_of_bullet_with_enemy_despawn_bullet(self):
+        """
+        Check if the <enemy> is despawend when the <missile> collides with it's sprite
+        """
+        self.game.player_input("fire")
+        self.game.main_loop(testmode = True)
+        colliding_enemy = self.game.enemies_tracker[-1]
+        colliding_missile = self.game.player.missiles_shot[-1]
+        colliding_enemy.setpos(colliding_missile.xpos, colliding_missile.ypos)
+        self.game.main_loop(testmode = True)
+        current_missiles_ids = []
+        for missile in self.game.player.missiles_shot:
+            current_missiles_ids.append(id(missile))
+        self.assertNotIn(id(colliding_missile), current_missiles_ids)
