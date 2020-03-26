@@ -139,10 +139,12 @@ class Game():
         """
         Move all sprite for one iteration an check for collisions
         """
-        for sprite in self.all_sprites:
+        sprites = self.all_sprites
+        for sprite in sprites:
             sprite.move()
 
-            for powerup in self.powerups_tracker:
+            powerups = self.powerups_tracker
+            for powerup in powerups:
                 #Check if player collects a power up
                 if self.player.is_collision(powerup):
                     self.player.powerup_type = powerup.type
@@ -155,7 +157,8 @@ class Game():
                     Enemy.spawn(self)
                     self.update_lives(-1) #remove 1 live
 
-                for missile in self.player.missiles_shot:
+                missiles  = self.player.missiles_shot
+                for missile in missiles:
                     # Check for collision with all missles shot
                     if missile.is_collision(enemy):
                         self.score.update_current(enemy.value) #add 10 to score
@@ -165,7 +168,8 @@ class Game():
                         if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
                         if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)
 
-                for powerup in self.powerups_tracker:
+                new_powerups = self.powerups_tracker 
+                for powerup in new_powerups:
                     #Check if player collects a power up
                     if powerup.is_collision(enemy):
                         powerup.despawn()

@@ -47,12 +47,30 @@ class Sprite(turtle.Turtle):
     def move(self):
         """ 
         Sprite movement per frame:
+        - move sprite in <heading> direction by amount of <speed>
         - check for boundary collision
         - change postion and heading if necessary
         """
         self.fd(self.speed)
+        
+        if self.collision_with_boundary():
+            self.reaction_to_boundary_collision()
 
-        #Boundary detection
+    def collision_with_boundary(self):
+        """ Check for collision of the sprite with a boundary defined by field_width and field_height """
+        if self.xcor() < - self.game.config_values['field_width']/2 or self.xcor() > self.game.config_values['field_width']/2 or \
+        self.ycor() < - self.game.config_values['field_height']/2 or self.ycor() > self.game.config_values['field_height']/2 :
+            logging.debug(f'Collision of <{self._name}> with <boundary> detected!')
+            return True
+        else:
+            False
+    
+    def reaction_to_boundary_collision(self):
+        """ Set default reaction of sprites to bounce off the boundary """
+        self.bounce_off_boundary()
+
+    def bounce_off_boundary(self):
+        """ Calculate new postion and heading of the sprite when bouncing off a boundary """
         if self.xcor() + self.radius > self.game.config_values['field_width']/2:
             self.setx(self.game.config_values['field_width']/2 - self.radius)
             #Invert xIncrement
@@ -190,20 +208,16 @@ class Missile(Sprite):
 
     @classmethod
     def spawn(cls, game, shooter, change_heading = 0):
+        """ Spawn a missile on the position of the player in the same direction as the player """
         if len(shooter.missiles_shot) < shooter.max_missiles_number:
             shooter.missiles_shot.append(Missile(game, shooter , change_heading))
             logging.debug('Missile fired - currently:{}/{} flying'.format(len(shooter.missiles_shot), shooter.max_missiles_number))
         else:
             logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(shooter.missiles_shot), shooter.max_missiles_number))
 
-    def move(self):
-        ''' Check for borders and distroies missele, otherwise moves '''
-        if self.xcor() < - self.game.config_values['field_width']/2 or self.xcor() > self.game.config_values['field_width']/2 or \
-        self.ycor() < - self.game.config_values['field_height']/2 or self.ycor() > self.game.config_values['field_height']/2 :
-            logging.debug('Missile collided with wall')
-            Missile.despawn(self)
-        else:
-            self.fd(self.speed)
+    def reaction_to_boundary_collision(self):
+        """ Set the reaction on boundary collision to <despawn()>, default is bouncing_off_boundary """
+        Missile.despawn(self)
 
 class Enemy(Sprite):
     """ Enemy sprite """
