@@ -208,7 +208,7 @@ class Missile(Sprite):
 
     @classmethod
     def spawn(cls, game, shooter, change_heading = 0):
-        """ Spawn a missile on the position of the player in the same direction as the player """
+        """ Spawn a missile on the position of the player with head based in the players direction """
         if len(shooter.missiles_shot) < shooter.max_missiles_number:
             shooter.missiles_shot.append(Missile(game, shooter , change_heading))
             logging.debug('Missile fired - currently:{}/{} flying'.format(len(shooter.missiles_shot), shooter.max_missiles_number))
