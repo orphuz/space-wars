@@ -283,6 +283,6 @@ class Powerup(Sprite):
     def set_despawn_timer(self):
         """ Set despawn time a event in eve_man and store the events id in the sprites list of linked events """
         lifetime = random.randint(self.game.config_values['powerup_min_lifetime'], self.game.config_values['powerup_max_lifetime'])
-        despawn_event_id = self.game.event_man.add_timed_event(self.despawn, lifetime, description = "Despawn when lifetime of <{lifetime}> is expired")
+        despawn_event_id = self.game.event_man.add_timed_event(self.despawn, lifetime, description = "Despawn power up after its lifetime is expired")
         self.linked_events.append(despawn_event_id)
 

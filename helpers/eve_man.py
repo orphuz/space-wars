@@ -24,7 +24,7 @@ class Event_man():
 
     def add_timed_event(self, event_function, duration, description = None):
         """ Create an object of type Event based on provided args and add it to the list of timed events """
-        new_event = Event(event_function, duration)
+        new_event = Event(event_function, duration, description)
         self._timed_events.append(new_event)
         logging.debug(f"New timed event with <{new_event.id}> for trigger time <{new_event.trigger_time}> added")
         return new_event.id
@@ -81,6 +81,7 @@ class Event():
         else:
             raise TypeError('Provided argument for <function> must be a of type function')
 
+        self.description = None
         if description != None:
             if isinstance(description, str):
                 self.description = description
@@ -106,4 +107,5 @@ class Event():
                 raise TypeError(f"{tyerr} - Arugment 'duration' must be a number")
 
     def execute(self):
+        logging.debug(f"Executing event <{self.id}> - Description: '{self.description}'")
         self.function()
