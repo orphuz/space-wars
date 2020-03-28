@@ -16,6 +16,7 @@ class Sprite(turtle.Turtle):
         self.screen.tracer(0)
         self.penup()
         self.radius = spritesize * 10
+        self.linked_events = []
         logging.debug(f"Instance of {self.__class__} created")
 
     @property
@@ -39,6 +40,8 @@ class Sprite(turtle.Turtle):
         self.ht()
         try:
             self.object_tracker.remove(self)
+            for event_id in self.linked_events:
+                if event_id in self.game.event_man.event_ids: self.game.event_man.delete_event_by_id(event_id)
             logging.debug(f'Instance of {self.__class__} despawned - currently:{len(self.object_tracker)} existing')
             #del self
         except ValueError as valerr:
@@ -268,16 +271,18 @@ class Powerup(Sprite):
     @classmethod
     def spawn(cls, game, distance = 50):
         """ Spawns an object of type enemy """
-        if len(game.powerups_tracker) < game.powerups_max_number:
-            game.powerups_tracker.append(cls(game, 'multi_shot'))
-            game.powerups_tracker[-1].random_position(game.player, distance)
-            cls.set_despawn_timer(game)
+        if len(game.powerups_tracker) < game.powerups_max_number:          
+            new_powerup = cls(game, 'multi_shot')
+            game.powerups_tracker.append(new_powerup)
+            new_powerup.random_position(game.player, distance)
+            new_powerup.set_despawn_timer()
             logging.debug(f'<Powerup>  spawned - currently:{len(game.powerups_tracker)}/{game.powerups_max_number} existing')
         else:
             logging.debug(f'Max number of <Powerups> ups already existing - currently:{len(game.powerups_tracker)}/{game.powerups_max_number}')
 
-    @classmethod
-    def set_despawn_timer(cls, game):
-        lifetime = random.randint(game.config_values['powerup_min_lifetime'], game.config_values['powerup_max_lifetime'])
-        game.event_man.add_timed_event(game.powerups_tracker[-1].despawn, lifetime)
+    def set_despawn_timer(self):
+        """ Set despawn time a event in eve_man and store the events id in the sprites list of linked events """
+        lifetime = random.randint(self.game.config_values['powerup_min_lifetime'], self.game.config_values['powerup_max_lifetime'])
+        despawn_event_id = self.game.event_man.add_timed_event(self.despawn, lifetime, description = "Despawn when lifetime of <{lifetime}> is expired")
+        self.linked_events.append(despawn_event_id)
 

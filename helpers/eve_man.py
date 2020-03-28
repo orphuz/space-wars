@@ -1,5 +1,6 @@
 import logging
 import time
+import types
 
 class Event_man():
     """
@@ -10,42 +11,99 @@ class Event_man():
         """ Initiate empty list of events """
         self._timed_events = []
 
-    def add_timed_event(self, event_function, duration):
-        """ Add a time based event provided as "event_function" that will be triggered after "duration" is expired """
-        self._timed_events.append({"event": event_function, "trigger_time": self.get_trigger_time(duration)})
-        logging.debug(f"New timed event with duration of {duration}s added: {self._timed_events[-1]['event'].__class__}.{self._timed_events[-1]['event'].__name__}")
+    @property
+    def events(self):
+        return self._timed_events
 
-    def get_trigger_time(self, duration):
-        """ Calculate the target trigger time based on the given duration """
-        try:
-            if duration > 0:
-                trigger_time = time.time() + float(duration)
-                return trigger_time
-            else:
-                raise ValueError(f"Argument 'duration' must be a number greater 0")
-        except TypeError as tyerr:
-            raise TypeError(f"{tyerr} - Arugment 'duration' must be a number")
+    @property
+    def event_ids(self):
+        event_ids = []
+        for event in self.events:
+            event_ids.append(event.id)
+        return event_ids
+
+    def add_timed_event(self, event_function, duration, description = None):
+        """ Create an object of type Event based on provided args and add it to the list of timed events """
+        new_event = Event(event_function, duration)
+        self._timed_events.append(new_event)
+        logging.debug(f"New timed event with <{new_event.id}> for trigger time <{new_event.trigger_time}> added")
+        return new_event.id
 
     def check_events(self):
         """ Execute stored event function if corresponting "trigger_time" is reached / exceeded """
         current_time = time.time()
-        executed_events = []
 
-        for event in self._timed_events:
-            # Execute all events and register them as executed
-            if event["trigger_time"] <= current_time:
-                event["event"]()
-                executed_events.append(event)
-                logging.debug(f"Timed event triggered, scheduled time was{time.ctime(event['trigger_time'])}")
-
-        for executed_event in executed_events:
-            # Remove all executed events from the event register
-            self._timed_events.remove(executed_event)
+        events = self._timed_events
+        for event in events:
+            # Execute and delete all due events
+            if event.trigger_time <= current_time:
+                event.execute()
+                logging.debug(f"Timed event triggered, scheduled time was{time.ctime(event.trigger_time)}")
+                if event in self._timed_events: self.delete_event(event)
 
     def delete_event(self, event):
-        """ Delete scheduled event provied as argument "event-object" from the register """
-        if event in self._timed_events:
+        """ Delete scheduled event provied as argument "event" from the list of timed events """
+        events = self._timed_events
+        if event in events:
             self._timed_events.remove(event)
-            logging.debug(f"Event {event} removed from from list of scheduled events")
+            logging.debug(f"Event {event.id} removed from from list of scheduled events")
         else:
-            logging.error(f"Event {event} not in list of scheduled events")
+            logging.error(f"Event {event.id} not in list of scheduled events")
+
+    def delete_event_by_id(self, event_id):
+        """ Delete scheduled event with provided id from the list of timed events """
+        event_ids = self.event_ids
+        if event_id in event_ids:
+            events = self._timed_events
+            for event in events:
+                if event.id == event_id:
+                    self._timed_events.remove(event)
+                    logging.debug(f"Event <{event.id}> removed from from list of scheduled events")
+        else:
+            logging.error(f"Event <{event.id}> not in list of scheduled events")
+
+
+class Event():
+    """
+    Event class to hold seperate data for each event
+    """
+
+    def __init__(self, function, duration, description = None):
+        """ Store all relevant data including the function to execute after proper type checking """
+        if isinstance(function, types.MethodType) or isinstance(function, types.FunctionType):
+            self.function = function
+        else:
+            raise TypeError('Provided argument for <function> must be a of type method ord function')
+
+        if isinstance(duration, int):
+            self.duration = duration
+            self.trigger_time = self.get_trigger_time(duration)
+        else:
+            raise TypeError('Provided argument for <function> must be a of type function')
+
+        if description != None:
+            if isinstance(description, str):
+                self.description = description
+            else:
+                raise TypeError('Provided argument for <description> must be a string')
+
+        self.id = id(self)
+
+        if description != None:
+            logging.debug(f"Event {self.id} created: {self.description}")
+        else:
+            logging.debug(f"Event {self.id} created")
+
+    def get_trigger_time(self, duration):
+            """ Calculate the target trigger time based on the given duration """
+            try:
+                if duration > 0:
+                    trigger_time = time.time() + float(duration)
+                    return trigger_time
+                else:
+                    raise ValueError(f"Argument 'duration' must be a number greater 0")
+            except TypeError as tyerr:
+                raise TypeError(f"{tyerr} - Arugment 'duration' must be a number")
+
+    def execute(self):
+        self.function()
