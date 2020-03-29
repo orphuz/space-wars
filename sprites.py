@@ -61,8 +61,8 @@ class Sprite(turtle.Turtle):
 
     def collision_with_boundary(self):
         """ Check for collision of the sprite with a boundary defined by field_width and field_height """
-        if self.xcor() < - self.game.config_values['field_width']/2 or self.xcor() > self.game.config_values['field_width']/2 or \
-        self.ycor() < - self.game.config_values['field_height']/2 or self.ycor() > self.game.config_values['field_height']/2 :
+        if self.xcor() < - self.game.config.values['field_width']/2 or self.xcor() > self.game.config.values['field_width']/2 or \
+        self.ycor() < - self.game.config.values['field_height']/2 or self.ycor() > self.game.config.values['field_height']/2 :
             logging.debug(f'Collision of <{self._name}> with <boundary> detected!')
             return True
         else:
@@ -74,32 +74,32 @@ class Sprite(turtle.Turtle):
 
     def bounce_off_boundary(self):
         """ Calculate new postion and heading of the sprite when bouncing off a boundary """
-        if self.xcor() + self.radius > self.game.config_values['field_width']/2:
-            self.setx(self.game.config_values['field_width']/2 - self.radius)
+        if self.xcor() + self.radius > self.game.config.values['field_width']/2:
+            self.setx(self.game.config.values['field_width']/2 - self.radius)
             #Invert xIncrement
             if self.heading() <= 90:
                 self.setheading(180 - self.heading())
             else:
                 self.setheading(180 - self.heading())
 
-        if self.xcor() - self.radius < -self.game.config_values['field_width']/2:
-            self.setx(-self.game.config_values['field_width']/2 + self.radius)
+        if self.xcor() - self.radius < -self.game.config.values['field_width']/2:
+            self.setx(-self.game.config.values['field_width']/2 + self.radius)
             #Invert yxncrement
             if self.heading() <= 90:
                 self.setheading(90 + self.heading())
             else:
                 self.setheading(180 - self.heading())
 
-        if self.ycor() + self.radius > self.game.config_values['field_height']/2:
-            self.sety(self.game.config_values['field_height']/2 - self.radius)
+        if self.ycor() + self.radius > self.game.config.values['field_height']/2:
+            self.sety(self.game.config.values['field_height']/2 - self.radius)
             #Invert yIncrement
             if self.heading() <= 180:
                 self.setheading(- self.heading())
             else:
                 self.setheading(180 - self.heading())
 
-        if self.ycor() - self.radius < -self.game.config_values['field_height']/2:
-            self.sety(-self.game.config_values['field_height']/2 + self.radius)
+        if self.ycor() - self.radius < -self.game.config.values['field_height']/2:
+            self.sety(-self.game.config.values['field_height']/2 + self.radius)
             #Invert yIncrement
             if self.heading() > 180:
                 self.setheading(- self.heading())
@@ -122,8 +122,8 @@ class Sprite(turtle.Turtle):
     def random_position(self, other = None, distance = 30):
         """ Change sprite position to random location """
         while True:
-            x = random.randint(- int(self.game.config_values['field_width']) // 2, self.game.config_values['field_width'] // 2)
-            y = random.randint(- int(self.game.config_values['field_height']) // 2, self.game.config_values['field_height'] // 2)
+            x = random.randint(- int(self.game.config.values['field_width']) // 2, self.game.config.values['field_width'] // 2)
+            y = random.randint(- int(self.game.config.values['field_height']) // 2, self.game.config.values['field_height'] // 2)
             self.goto(x, y)
             if other != None:
                 if self.distance(other) >= (self.radius + other.radius + distance):
@@ -148,8 +148,8 @@ class Player(Sprite):
         #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
         self.setpos(0,0)
         self.random_heading()
-        self.speed = self.game.config_values['player_speed_default']
-        self.lives = self.game.config_values['player_lives']
+        self.speed = self.game.config.values['player_speed_default']
+        self.lives = self.game.config.values['player_lives']
         self.missiles_shot = []
         self.max_missiles_number = 3 # Todo: make global?
 
@@ -179,10 +179,10 @@ class Player(Sprite):
         return game.players_tracker[-1]
 
     def turn_left(self):
-        self.lt(self.game.config_values['player_turn_rate'])
+        self.lt(self.game.config.values['player_turn_rate'])
 
     def turn_right(self):
-        self.rt(self.game.config_values['player_turn_rate'])
+        self.rt(self.game.config.values['player_turn_rate'])
 
     def accelerate(self):
         self.speed += 1
@@ -207,7 +207,7 @@ class Missile(Sprite):
         #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
         self.setpos(shooter.xpos, shooter.ypos)
         self.setheading(shooter.heading() + change_heading)
-        self.speed = self.game.config_values['missile_speed']
+        self.speed = self.game.config.values['missile_speed']
 
     @classmethod
     def spawn(cls, game, shooter, change_heading = 0):
@@ -227,7 +227,7 @@ class Enemy(Sprite):
 
     def __init__(self, game):
         Sprite.__init__(self, game, 'Enemy', 'circle', 1, 'red', game.enemies_tracker)
-        self.speed = self.game.config_values['enemy_speed']
+        self.speed = self.game.config.values['enemy_speed']
         self.random_heading()
         self._value = 100
     
@@ -282,7 +282,7 @@ class Powerup(Sprite):
 
     def set_despawn_timer(self):
         """ Set despawn time a event in eve_man and store the events id in the sprites list of linked events """
-        lifetime = random.randint(self.game.config_values['powerup_min_lifetime'], self.game.config_values['powerup_max_lifetime'])
+        lifetime = random.randint(self.game.config.values['powerup_min_lifetime'], self.game.config.values['powerup_max_lifetime'])
         despawn_event_id = self.game.event_man.add_timed_event(self.despawn, lifetime, description = "Despawn power up after its lifetime is expired")
         self.linked_events.append(despawn_event_id)
 

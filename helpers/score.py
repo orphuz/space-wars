@@ -14,7 +14,7 @@ class Score():
         highscore = 0
         try:
             highscore = pickle.load( open( self._highscorefile, "rb" ) )
-            logging.debug(f"Sucessfully loaded high score of <{highscore}>")
+            logging.debug(f"High score of <{highscore}> sucessfully loaded ")
         except IOError as ioerr:
             logging.warn(f"{ioerr} - No pickled high score found, creating new with integer value 0")
             pickle.dump(int(0), open(self._highscorefile, "wb" ) )

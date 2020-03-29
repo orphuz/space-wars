@@ -120,7 +120,7 @@ class Over(State):
         self.game.menu.over_screen(self.game.score.current, self.game.score.highscore)
         self.game.score.save_highscore()
         self.game.score.reset_current()
-        self.game._lives = self.game.config_values['player_lives']
+        self.game._lives = self.game.config.values['player_lives']
         # self.execution()
 
     def execution(self):

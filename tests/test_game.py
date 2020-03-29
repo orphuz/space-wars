@@ -106,7 +106,7 @@ class Test_02_Game_Inputs(unittest.TestCase):
         previous_direction = self.game.player.heading()
         self.game.player_input("left")
         self.game.main_loop(testmode = True)
-        new_direction = previous_direction + self.game.config_values["player_turn_rate"]
+        new_direction = previous_direction + self.game.config.values["player_turn_rate"]
         if new_direction >= 360: new_direction -= 360
         self.assertEqual(self.game.player.heading(), new_direction )
 
@@ -115,7 +115,7 @@ class Test_02_Game_Inputs(unittest.TestCase):
         previous_direction = self.game.player.heading()
         self.game.player_input("right")
         self.game.main_loop(testmode = True)
-        new_direction = previous_direction - self.game.config_values["player_turn_rate"]
+        new_direction = previous_direction - self.game.config.values["player_turn_rate"]
         if new_direction < 0: new_direction += 360
         self.assertEqual(self.game.player.heading(), new_direction )
 
@@ -286,7 +286,7 @@ class Test_04_Game_Boundary_Collisions(unittest.TestCase):
         old_heading = sprite.heading()
         old_x_comp = cos(radians(old_heading))
         old_y_comp = sin(radians(old_heading))
-        sprite.setpos(self.game.config_values['field_width'] /2, 0)
+        sprite.setpos(self.game.config.values['field_width'] /2, 0)
         self.game.main_loop(testmode = True)
         x_comp = cos(radians(sprite.heading()))
         y_comp = sin(radians(sprite.heading()))
@@ -302,7 +302,7 @@ class Test_04_Game_Boundary_Collisions(unittest.TestCase):
         old_heading = sprite.heading()
         old_x_comp = cos(radians(old_heading))
         old_y_comp = sin(radians(old_heading))
-        sprite.setpos(self.game.config_values['field_width'] / -2, 0)
+        sprite.setpos(self.game.config.values['field_width'] / -2, 0)
         self.game.main_loop(testmode = True)
         x_comp = cos(radians(sprite.heading()))
         y_comp = sin(radians(sprite.heading()))
@@ -318,7 +318,7 @@ class Test_04_Game_Boundary_Collisions(unittest.TestCase):
         old_heading = sprite.heading()
         old_x_comp = cos(radians(old_heading))
         old_y_comp = sin(radians(old_heading))
-        sprite.setpos(0 , self.game.config_values['field_height'] / 2)
+        sprite.setpos(0 , self.game.config.values['field_height'] / 2)
         self.game.main_loop(testmode = True)
         x_comp = cos(radians(sprite.heading()))
         y_comp = sin(radians(sprite.heading()))
@@ -334,7 +334,7 @@ class Test_04_Game_Boundary_Collisions(unittest.TestCase):
         old_heading = sprite.heading()
         old_x_comp = cos(radians(old_heading))
         old_y_comp = sin(radians(old_heading))
-        sprite.setpos(0 , self.game.config_values['field_height'] / -2)
+        sprite.setpos(0 , self.game.config.values['field_height'] / -2)
         self.game.main_loop(testmode = True)
         x_comp = cos(radians(sprite.heading()))
         y_comp = sin(radians(sprite.heading()))
@@ -369,7 +369,7 @@ class Test_04_Game_Boundary_Collisions(unittest.TestCase):
         self.game.player_input("fire")
         self.game.main_loop(testmode = True)
         colliding_missile_id = id(self.game.player.missiles_shot[-1])
-        self.game.player.missiles_shot[-1].setpos(self.game.config_values['field_width'] / 2 + 10, 0)
+        self.game.player.missiles_shot[-1].setpos(self.game.config.values['field_width'] / 2 + 10, 0)
         self.game.player.missiles_shot[-1].speed = 0
         self.game.main_loop(testmode = True)
         current_missiles_ids = []
