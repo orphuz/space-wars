@@ -1,6 +1,6 @@
 import unittest
 
-from helpers.eve_man import Event_man, Event
+from helpers.event import Event_man, Event
 
 import time
 
