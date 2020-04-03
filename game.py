@@ -12,10 +12,10 @@ from sprites import Enemy
 from sprites import Missile
 from sprites import Powerup
 
-from helpers.game_config import Config
+from helpers.config import Config
 from helpers.menu import Menu
-from helpers.fps_man import Fps_manager
-from helpers.eve_man import Event_man
+from helpers.fps import Fps_manager
+from helpers.event import Event_man
 from helpers.score import Score
 
 import states
@@ -24,12 +24,13 @@ class Game():
     def __init__(self, name):
         """ Main game class """
         self.event_man = Event_man()
-        self.config_values = self.load_config()
+        self.config = Config()
+        # self.config.values = self.config.current_values
         self.menu = Menu()
         self._highscorefile = "data/highscore.pickle"
         self.score = Score(self._highscorefile)
         self._level = 1
-        self._lives = self.config_values['player_lives']
+        self._lives = self.config.values['player_lives']
 
         self._user_input = None
 
@@ -47,8 +48,8 @@ class Game():
         self.player = None
 
         self.enemies_tracker = []
-        self.enemies_max_number = 10
         self.enemies_initial_number = 3
+        self.enemies_max_number = 10
         self.enemies_spawn_prob = 0.5
 
         self.powerups_tracker = []
@@ -89,13 +90,7 @@ class Game():
             raise ValueError('Requested state <%s> is unknown' % state_request)
         self.state = state_request
         logging.debug('Set game.state = {}'.format(self.state.name))
-        self.state.preperation()
-
-    def load_config(self):
-        """ Load self config from the config file """
-        config = Config()
-        logging.debug("self config loaded")
-        return config.current_values        
+        self.state.preperation()   
 
     def bind_keys(self):
         """ Assign Keyboard Bindings """
@@ -139,40 +134,45 @@ class Game():
         """
         Move all sprite for one iteration an check for collisions
         """
-        for sprite in self.all_sprites:
+        sprites = self.all_sprites
+        for sprite in sprites:
             sprite.move()
 
-            for powerup in self.powerups_tracker:
-                #Check if player collects a power up
-                if self.player.is_collision(powerup):
-                    self.player.powerup_type = powerup.type
-                    powerup.despawn()
+        powerups = self.powerups_tracker
+        for powerup in powerups:
+            #Check if player collects a power up
+            if self.player.is_collision(powerup):
+                self.player.apply_buff(powerup)
+                powerup.despawn()
+        
+        enemies = self.enemies_tracker
+        for enemy in enemies:
+            #Check for player collision with enemies
+            if self.player.is_collision(enemy):
+                enemy.despawn()
+                Enemy.spawn(self)
+                self.update_lives(-1) #remove 1 live
 
-            for enemy in self.enemies_tracker:
-                #Check for player collision with enemies
-                if self.player.is_collision(enemy):
+            missiles  = self.player.missiles_shot
+            for missile in missiles:
+                # Check for collision with all missles shot
+                if missile.is_collision(enemy):
+                    self.score.update_current(enemy.value) #add 10 to score
                     enemy.despawn()
+                    missile.despawn()
                     Enemy.spawn(self)
-                    self.update_lives(-1) #remove 1 live
+                    if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
+                    if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)
 
-                for missile in self.player.missiles_shot:
-                    # Check for collision with all missles shot
-                    if missile.is_collision(enemy):
-                        self.score.update_current(enemy.value) #add 10 to score
-                        enemy.despawn()
-                        missile.despawn()
-                        Enemy.spawn(self)
-                        if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
-                        if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)
-
-                for powerup in self.powerups_tracker:
-                    #Check if player collects a power up
-                    if powerup.is_collision(enemy):
-                        powerup.despawn()
+            new_powerups = self.powerups_tracker 
+            for powerup in new_powerups:
+                #Check if player collects a power up
+                if powerup.is_collision(enemy):
+                    powerup.despawn()
 
     def main_loop(self, testmode = False):
         """ Run the main game """
-        if 'render_manager' not in locals():  render_manager = Fps_manager(self.config_values['game_fps'], 5) # Condition for testing purpose
+        if 'render_manager' not in locals():  render_manager = Fps_manager(self.config.values['game_fps'], 5) # Condition for testing purpose
         
         while True:
 
@@ -234,15 +234,15 @@ class Game():
         self.pen.clear()
         self.pen.penup()
         self.pen.setheading(0)
-        self.pen.goto(- int(float(self.config_values['field_width'])) / 2, int(float(self.config_values['field_height']) / 2))
+        self.pen.goto(- int(float(self.config.values['field_width'])) / 2, int(float(self.config.values['field_height']) / 2))
         self.pen.pendown()
-        self.pen.fd(self.config_values['field_width'])
+        self.pen.fd(self.config.values['field_width'])
         self.pen.rt(90)
-        self.pen.fd(self.config_values['field_height'])
+        self.pen.fd(self.config.values['field_height'])
         self.pen.rt(90)
-        self.pen.fd(self.config_values['field_width'])
+        self.pen.fd(self.config.values['field_width'])
         self.pen.rt(90)
-        self.pen.fd(self.config_values['field_height'])
+        self.pen.fd(self.config.values['field_height'])
         self.pen.rt(90)
         self.pen.penup()
         self.pen.ht()
@@ -255,15 +255,15 @@ class Game():
         msg_score = f"Score: {self.score.current}"
         msg_highscore = f"High Score: {self.score.highscore}"
         self._t_score.penup()
-        self._t_score.goto(- int(float(self.config_values['field_width']) / 2), int(float(self.config_values['field_height']) / 2 + 10))
+        self._t_score.goto(- int(float(self.config.values['field_width']) / 2), int(float(self.config.values['field_height']) / 2 + 10))
         self._t_score.pendown()
         self._t_score.write(msg_lives, font=("Arial", 16, "normal"))
         self._t_score.penup()
-        self._t_score.goto(- int(float(self.config_values['field_width']) / 2) , int(float(self.config_values['field_height']) / 2 + 30))
+        self._t_score.goto(- int(float(self.config.values['field_width']) / 2) , int(float(self.config.values['field_height']) / 2 + 30))
         self._t_score.pendown()
         self._t_score.write(msg_score, font=("Arial", 16, "normal"))
         self._t_score.penup()
-        self._t_score.goto( int(float(self.config_values['field_width']) / 2 - 165), int(float(self.config_values['field_height']) / 2 + 10))
+        self._t_score.goto( int(float(self.config.values['field_width']) / 2 - 165), int(float(self.config.values['field_height']) / 2 + 10))
         self._t_score.pendown()
         self._t_score.write(msg_highscore, font=("Arial", 16, "normal"))
         logging.debug("Score drawn")
@@ -276,6 +276,7 @@ class Game():
 
     def update_lives(self, modifier_lives):
         self._lives += modifier_lives
+        self.score.be_new()
         if self._lives <= 0:    # check for player death
                 self.state.transit('player_death')
 

@@ -1,5 +1,7 @@
 import unittest
 
+from math import sin, cos, radians
+
 from game import Game
 
 
@@ -104,7 +106,7 @@ class Test_02_Game_Inputs(unittest.TestCase):
         previous_direction = self.game.player.heading()
         self.game.player_input("left")
         self.game.main_loop(testmode = True)
-        new_direction = previous_direction + self.game.config_values["player_turn_rate"]
+        new_direction = previous_direction + self.game.config.values["player_turn_rate"]
         if new_direction >= 360: new_direction -= 360
         self.assertEqual(self.game.player.heading(), new_direction )
 
@@ -113,7 +115,7 @@ class Test_02_Game_Inputs(unittest.TestCase):
         previous_direction = self.game.player.heading()
         self.game.player_input("right")
         self.game.main_loop(testmode = True)
-        new_direction = previous_direction - self.game.config_values["player_turn_rate"]
+        new_direction = previous_direction - self.game.config.values["player_turn_rate"]
         if new_direction < 0: new_direction += 360
         self.assertEqual(self.game.player.heading(), new_direction )
 
@@ -164,7 +166,7 @@ class Test_02_Game_Inputs(unittest.TestCase):
         self.assertEqual(current_number_of_powerups, previous_number_of_powerups + 1)
         self.assertIsInstance(self.game.powerups_tracker[-1], Powerup)
 
-class Test_03_Game_Collisions(unittest.TestCase):
+class Test_03_Game_Sprite_Collisions(unittest.TestCase):
     """ 
     Check all possible reactions to collisions of sprites while the game is running
     """
@@ -250,3 +252,127 @@ class Test_03_Game_Collisions(unittest.TestCase):
         for missile in self.game.player.missiles_shot:
             current_missiles_ids.append(id(missile))
         self.assertNotIn(id(colliding_missile), current_missiles_ids)
+
+
+class Test_04_Game_Boundary_Collisions(unittest.TestCase):
+    """ 
+    Check all possible reactions to collisions of boundaries while the game is running
+    """
+
+    def setUp(self):
+        """
+        Inistanciate an instance of the game,
+        start running the main loop in test mode (only one iteration) and
+        transit to game state <running>
+        before every test execution
+        """
+        self.game = Game("Test Space Wars")
+        self.game.main_loop(testmode = True)
+        self.game.player_input("confirm")
+        self.game.main_loop(testmode = True)
+
+    def tearDown(self):
+        """ Delete the game instance after every test execution"""
+        self.game.set_state(self.game.exiting)
+        del self.game
+
+
+    def check_bounce_on_right_boundary(self, sprite):
+        """ 
+        Check correct bouncing on <right> boundary:
+        - on collision the sprite's heading direction is inverted in the <x> component
+        """
+        sprite.setheading(30)
+        old_heading = sprite.heading()
+        old_x_comp = cos(radians(old_heading))
+        old_y_comp = sin(radians(old_heading))
+        sprite.setpos(self.game.config.values['field_width'] /2, 0)
+        self.game.main_loop(testmode = True)
+        x_comp = cos(radians(sprite.heading()))
+        y_comp = sin(radians(sprite.heading()))
+        self.assertAlmostEqual(x_comp, - old_x_comp )
+        self.assertAlmostEqual(y_comp, old_y_comp)
+
+    def check_bounce_on_left_boundary(self, sprite):
+        """ 
+        Check correct bouncing on <left> boundary:
+        - on collision the sprite's heading direction is inverted in the <x> component
+        """
+        sprite.setheading(130)
+        old_heading = sprite.heading()
+        old_x_comp = cos(radians(old_heading))
+        old_y_comp = sin(radians(old_heading))
+        sprite.setpos(self.game.config.values['field_width'] / -2, 0)
+        self.game.main_loop(testmode = True)
+        x_comp = cos(radians(sprite.heading()))
+        y_comp = sin(radians(sprite.heading()))
+        self.assertAlmostEqual(x_comp, - old_x_comp )
+        self.assertAlmostEqual(y_comp, old_y_comp)
+
+    def check_bounce_on_top_boundary(self, sprite):
+        """ 
+        Check correct bouncing on<top> boundary:
+        -  on collision the sprite's heading direction is inverted in the <y> component
+        """
+        sprite.setheading(30)
+        old_heading = sprite.heading()
+        old_x_comp = cos(radians(old_heading))
+        old_y_comp = sin(radians(old_heading))
+        sprite.setpos(0 , self.game.config.values['field_height'] / 2)
+        self.game.main_loop(testmode = True)
+        x_comp = cos(radians(sprite.heading()))
+        y_comp = sin(radians(sprite.heading()))
+        self.assertAlmostEqual(x_comp, old_x_comp )
+        self.assertAlmostEqual(y_comp, - old_y_comp)
+    
+    def check_bounce_on_bottom_boundary(self, sprite):
+        """ 
+        Check correct bouncing on <bottom> boundary:
+        - on collision the sprite's heading direction is inverted in the <y> component
+        """
+        sprite.setheading(330)
+        old_heading = sprite.heading()
+        old_x_comp = cos(radians(old_heading))
+        old_y_comp = sin(radians(old_heading))
+        sprite.setpos(0 , self.game.config.values['field_height'] / -2)
+        self.game.main_loop(testmode = True)
+        x_comp = cos(radians(sprite.heading()))
+        y_comp = sin(radians(sprite.heading()))
+        self.assertAlmostEqual(x_comp, old_x_comp )
+        self.assertAlmostEqual(y_comp, - old_y_comp)
+
+    def test_01_collision_of_player_with_all_borders(self):
+        """
+        Check if <player> sprite bounces off all four boundaries correctly
+        """
+        sprite = self.game.player
+        self.check_bounce_on_left_boundary(sprite)
+        self.check_bounce_on_right_boundary(sprite)
+        self.check_bounce_on_top_boundary(sprite)
+        self.check_bounce_on_bottom_boundary(sprite)
+    
+    def test_02_collision_of_enemy_with_all_borders(self):
+        sprite = self.game.enemies_tracker[-1]
+        self.check_bounce_on_left_boundary(sprite)
+        self.check_bounce_on_right_boundary(sprite)
+        self.check_bounce_on_top_boundary(sprite)
+        self.check_bounce_on_bottom_boundary(sprite)
+        """
+        Check if <enemy> sprite bounces off all four boundaries correctly
+        """
+
+    def test_03_collision_of_missile_with_all_borders(self):
+        """
+        Check if <missile> sprite despawn on collision with a boundary
+        """
+        from time import sleep
+        self.game.player_input("fire")
+        self.game.main_loop(testmode = True)
+        colliding_missile_id = id(self.game.player.missiles_shot[-1])
+        self.game.player.missiles_shot[-1].setpos(self.game.config.values['field_width'] / 2 + 10, 0)
+        self.game.player.missiles_shot[-1].speed = 0
+        self.game.main_loop(testmode = True)
+        current_missiles_ids = []
+        for missile in self.game.player.missiles_shot:
+            current_missiles_ids.append(id(missile))
+        self.assertNotIn(colliding_missile_id, current_missiles_ids)

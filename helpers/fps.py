@@ -42,17 +42,18 @@ class Fps_manager():
         remaining_time = self.target_time - time.perf_counter()
         if remaining_time > self.average_render_time:
             if self.frame_drop_counter > 0 :
-                self.frame_drop_counter -= 1  
+                self.frame_drop_counter = 0 
             self.timed_render(render_function)
         else:
             self.frame_drop_counter += 1
             #logging.warning(f"Dropping frame update: Execution of main loop took {abs(self.sleep_time):.6f}s too long - happend {self.frame_drop_counter} time(s)")
             if self.average_render_time != 0:
                 # TODO: Understand why the if statement is necessary
-                logging.warning(f"Dropping frame update: Last render time was {(((self.last_render_time / self.average_render_time)-1) * 100):.2f}% above the average")
+                logging.warning(f"Dropping frame update: Last render time was {(((self.last_render_time / self.average_render_time)-1) * 100):.2f}% above the average. Frame drop counter increased to <{self.frame_drop_counter}>")
             if self.frame_drop_counter > 5:
-                logging.error("Dropped more than five frames in a row - force rendering (screen update) now")
+                logging.error(f"Dropped <{self.frame_drop_counter}> frames in a row - force rendering (screen update) now")
                 self.timed_render(render_function)
+                self.frame_drop_counter = 0
 
         self.decide_to_sleep()        
 
