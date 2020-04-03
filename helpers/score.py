@@ -33,6 +33,9 @@ class Score():
     def is_new(self):
         return self._new_score
 
+    def be_new(self):
+        self._new_score = True
+
     def be_old(self):
         self._new_score = False
 

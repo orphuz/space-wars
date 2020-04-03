@@ -276,6 +276,7 @@ class Game():
 
     def update_lives(self, modifier_lives):
         self._lives += modifier_lives
+        self.score.be_new()
         if self._lives <= 0:    # check for player death
                 self.state.transit('player_death')
 
