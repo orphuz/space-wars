@@ -152,24 +152,13 @@ class Player(Sprite):
         self.random_heading()
         self.speed = self.game.config.values['player_speed_default']
         self.lives = self.game.config.values['player_lives']
+
         self.missiles_shot = []
-        self.max_missiles_number = 3 # Todo: make global?
-        
-        self.buffs = []
-
+        self.counter_icrementmissiles = 0      
         self.counter_multishot = 0
+        self.max_missiles_number =  (self.counter_multishot + 1) * (self.counter_icrementmissiles + 1)
 
-    @property
-    def powerup_type(self):
-        return self._powerup_type
-
-    @powerup_type.setter
-    def powerup_type(self, input_powerup_type):
-        if input_powerup_type != '': 
-            #Start a timer
-            pass
-        self._powerup_type = input_powerup_type
-        self.game.event_man.add_timed_event(self.remove_buff, 3)
+        self.buffs = []
 
     def apply_buff(self, buff):
         #TODO: Implement buff mechanism (registering, stacking, etc.)
@@ -199,14 +188,25 @@ class Player(Sprite):
             if buff.type == Powerup._types[1]: self.counter_multishot += 1
             if buff.type == Powerup._types[2]: self.counter_icrementmissiles += 1
 
+        self.max_missiles_number = self.burst_size * self.max_bursts
+
     def reset_counter(self):
         """ Resets the number of active buffs of each type to <0> """
         self.counter_missilespeed = 0
         self.counter_multishot = 0
-        self.counter_icrementmissiles = 0          
+        self.counter_icrementmissiles = 0
+
+    @property
+    def burst_size(self):
+        return ((self.counter_multishot + 1) * 2) + -1
+    
+    @property
+    def max_bursts(self):
+        return self.counter_icrementmissiles + 1   
 
     @classmethod
     def spawn(cls, game):
+        """ Spawn a player sprite, append it to the tracking list and return it's object """
         game.players_tracker.append(cls(game))
         return game.players_tracker[-1]
 
@@ -224,12 +224,16 @@ class Player(Sprite):
 
     def fire(self):
         """ Fire missles modified by current active buffs """
-        if self.counter_multishot > 0:
-            Missile.spawn(self.game, self, 10)
-            Missile.spawn(self.game, self, 0)
-            Missile.spawn(self.game, self, -10)
-        else:      
-            Missile.spawn(self.game, self)
+        missiles_available = self.max_missiles_number - len(self.missiles_shot)
+        if missiles_available >= self.burst_size:
+            if self.counter_multishot > 0:
+                for i in range(self.burst_size):
+                    angle = ((20 / (self.burst_size - 1)) * i - 10 )
+                    Missile.spawn(self.game, self, angle)
+            else:      
+                Missile.spawn(self.game, self)
+        else:
+            logging.info(f"Not enough missiles available for next burst {missiles_available} / {self.burst_size}") 
 
 
 class Missile(Sprite):
@@ -246,7 +250,8 @@ class Missile(Sprite):
     def spawn(cls, game, shooter, change_heading = 0):
         """ Spawn a missile on the position of the player with head based in the players direction """
         if len(shooter.missiles_shot) < shooter.max_missiles_number:
-            shooter.missiles_shot.append(Missile(game, shooter , change_heading))
+            new_missile = Missile(game, shooter, change_heading)
+            shooter.missiles_shot.append(new_missile)
             logging.debug('Missile fired - currently:{}/{} flying'.format(len(shooter.missiles_shot), shooter.max_missiles_number))
         else:
             logging.debug('All Missile already fired - currently:{}/{} flying'.format(len(shooter.missiles_shot), shooter.max_missiles_number))
@@ -290,7 +295,7 @@ class Powerup(Sprite):
         'increment_missiles'
         ]
 
-    def __init__(self, game, type, duration = 3):
+    def __init__(self, game, type, duration = 30):
         Sprite.__init__(self, game, 'Power Up', 'circle', 1, 'green', game.powerups_tracker)
         self.speed = 0
         if type in self._types:
