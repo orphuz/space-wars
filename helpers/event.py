@@ -1,6 +1,7 @@
 import logging
 import time
 import types
+import functools
 
 class Event_man():
     """
@@ -70,10 +71,10 @@ class Event():
 
     def __init__(self, function, duration, description = None):
         """ Store all relevant data including the function to execute after proper type checking """
-        if isinstance(function, types.MethodType) or isinstance(function, types.FunctionType):
+        if isinstance(function, types.MethodType) or isinstance(function, types.FunctionType) or isinstance(function, functools.partial):
             self.function = function
         else:
-            raise TypeError('Provided argument for <function> must be a of type method ord function')
+            raise TypeError(f'Provided argument for <function> must be a of type method or function but is <{type(function)}')
 
         if isinstance(duration, int):
             self.duration = duration

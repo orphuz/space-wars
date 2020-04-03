@@ -3,6 +3,8 @@ import math
 import turtle
 import logging
 
+from functools import partial
+
 class Sprite(turtle.Turtle):
 
     def __init__(self, game, name, spriteshape, spritesize, color, object_tracker):
@@ -39,13 +41,13 @@ class Sprite(turtle.Turtle):
     def despawn(self):
         self.ht()
         try:
-            self.object_tracker.remove(self)
             for event_id in self.linked_events:
                 if event_id in self.game.event_man.event_ids: self.game.event_man.delete_event_by_id(event_id)
+            self.object_tracker.remove(self)
             logging.debug(f'Instance of {self.__class__} despawned - currently:{len(self.object_tracker)} existing')
             #del self
         except ValueError as valerr:
-            logging.error(f'{valerr} - Cannot despawn {self}  {self.__class__} as it is not a member of {self.object_tracker}')
+            logging.error(f'{valerr} - Cannot despawn {self} as it is not a member of {self.object_tracker}')
 
     def move(self):
         """ 
@@ -152,6 +154,10 @@ class Player(Sprite):
         self.lives = self.game.config.values['player_lives']
         self.missiles_shot = []
         self.max_missiles_number = 3 # Todo: make global?
+        
+        self.buffs = []
+
+        self.counter_multishot = 0
 
     @property
     def powerup_type(self):
@@ -165,13 +171,39 @@ class Player(Sprite):
         self._powerup_type = input_powerup_type
         self.game.event_man.add_timed_event(self.remove_buff, 3)
 
-    def apply_buff(self):
+    def apply_buff(self, buff):
         #TODO: Implement buff mechanism (registering, stacking, etc.)
-        pass
+        if buff.type in Powerup._types:
+            self.buffs.append(buff)
+            logging.debug(f"Buff <{buff.type}> added")
+            if buff.duration > 0:
+                self.game.event_man.add_timed_event(partial(self.remove_buff, buff), buff.duration, description = f"Remove debuff effect <{buff.type}>")
+        else:
+            logging.error(f"Unknown buff type <{buff.type}>")
+        self.update_buff_effect()
 
-    def remove_buff(self, buff_id = None):
+    def remove_buff(self, buff = None):
         #TODO: Remove buff
-        logging.debug(f"POWER UP REMOVED (...not really)")
+        if buff == None:
+            raise ValueError(f"object to remove must be an istance of class <Powerup>")
+        self.buffs.remove(buff)
+        self.update_buff_effect()
+        logging.debug(f"Buff <{buff.type}> removed")
+
+    def update_buff_effect(self):
+        """ Counts and stores the number of active buffs of each type """
+        self.reset_counter()
+        buffs = self.buffs
+        for buff in buffs:
+            if buff.type == Powerup._types[0]: self.counter_missilespeed += 1
+            if buff.type == Powerup._types[1]: self.counter_multishot += 1
+            if buff.type == Powerup._types[2]: self.counter_icrementmissiles += 1
+
+    def reset_counter(self):
+        """ Resets the number of active buffs of each type to <0> """
+        self.counter_missilespeed = 0
+        self.counter_multishot = 0
+        self.counter_icrementmissiles = 0          
 
     @classmethod
     def spawn(cls, game):
@@ -191,12 +223,13 @@ class Player(Sprite):
         self.speed -= 1
 
     def fire(self):
-        if self._powerup_type == '':      
-            Missile.spawn(self.game, self)
-        elif self._powerup_type == 'multi_shot':
+        """ Fire missles modified by current active buffs """
+        if self.counter_multishot > 0:
             Missile.spawn(self.game, self, 10)
             Missile.spawn(self.game, self, 0)
             Missile.spawn(self.game, self, -10)
+        else:      
+            Missile.spawn(self.game, self)
 
 
 class Missile(Sprite):
@@ -241,6 +274,7 @@ class Enemy(Sprite):
         else:
             logging.debug('Max number of enemies already existing - currently:{}/{} flying'.format(len(game.enemies_tracker), game.enemies_max_number))
 
+
     @property
     def value(self):
         return self._value
@@ -256,11 +290,12 @@ class Powerup(Sprite):
         'increment_missiles'
         ]
 
-    def __init__(self, game, type):
+    def __init__(self, game, type, duration = 3):
         Sprite.__init__(self, game, 'Power Up', 'circle', 1, 'green', game.powerups_tracker)
         self.speed = 0
         if type in self._types:
             self._type = type
+            self.duration = duration
         else:
             logging.error('{} is not a valid type. Expected <{}>'.format(type, self._types))
 
@@ -285,4 +320,3 @@ class Powerup(Sprite):
         lifetime = random.randint(self.game.config.values['powerup_min_lifetime'], self.game.config.values['powerup_max_lifetime'])
         despawn_event_id = self.game.event_man.add_timed_event(self.despawn, lifetime, description = "Despawn power up after its lifetime is expired")
         self.linked_events.append(despawn_event_id)
-

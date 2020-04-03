@@ -138,36 +138,37 @@ class Game():
         for sprite in sprites:
             sprite.move()
 
-            powerups = self.powerups_tracker
-            for powerup in powerups:
-                #Check if player collects a power up
-                if self.player.is_collision(powerup):
-                    self.player.powerup_type = powerup.type
-                    powerup.despawn()
+        powerups = self.powerups_tracker
+        for powerup in powerups:
+            #Check if player collects a power up
+            if self.player.is_collision(powerup):
+                self.player.apply_buff(powerup)
+                powerup.despawn()
+        
+        enemies = self.enemies_tracker
+        for enemy in enemies:
+            #Check for player collision with enemies
+            if self.player.is_collision(enemy):
+                enemy.despawn()
+                Enemy.spawn(self)
+                self.update_lives(-1) #remove 1 live
 
-            for enemy in self.enemies_tracker:
-                #Check for player collision with enemies
-                if self.player.is_collision(enemy):
+            missiles  = self.player.missiles_shot
+            for missile in missiles:
+                # Check for collision with all missles shot
+                if missile.is_collision(enemy):
+                    self.score.update_current(enemy.value) #add 10 to score
                     enemy.despawn()
+                    missile.despawn()
                     Enemy.spawn(self)
-                    self.update_lives(-1) #remove 1 live
+                    if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
+                    if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)
 
-                missiles  = self.player.missiles_shot
-                for missile in missiles:
-                    # Check for collision with all missles shot
-                    if missile.is_collision(enemy):
-                        self.score.update_current(enemy.value) #add 10 to score
-                        enemy.despawn()
-                        missile.despawn()
-                        Enemy.spawn(self)
-                        if self.spawn_decision(self.enemies_spawn_prob): Enemy.spawn(self)
-                        if self.spawn_decision(self.powerups_spawn_prob): Powerup.spawn(self)
-
-                new_powerups = self.powerups_tracker 
-                for powerup in new_powerups:
-                    #Check if player collects a power up
-                    if powerup.is_collision(enemy):
-                        powerup.despawn()
+            new_powerups = self.powerups_tracker 
+            for powerup in new_powerups:
+                #Check if player collects a power up
+                if powerup.is_collision(enemy):
+                    powerup.despawn()
 
     def main_loop(self, testmode = False):
         """ Run the main game """
