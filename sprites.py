@@ -154,6 +154,7 @@ class Player(Sprite):
         self.lives = self.game.config.values['player_lives']
 
         self.missiles_shot = []
+        self.missle_speed = self.game.config.values['missile_speed']
         self.counter_icrementmissiles = 0      
         self.counter_multishot = 0
         self.max_missiles_number =  (self.counter_multishot + 1) * (self.counter_icrementmissiles + 1)
@@ -189,6 +190,7 @@ class Player(Sprite):
             if buff.type == Powerup._types[2]: self.counter_icrementmissiles += 1
 
         self.max_missiles_number = self.burst_size * self.max_bursts
+        self.missle_speed = self.game.config.values['missile_speed'] * (self.counter_missilespeed * 0.5 + 1)
 
     def reset_counter(self):
         """ Resets the number of active buffs of each type to <0> """
@@ -242,9 +244,10 @@ class Missile(Sprite):
     def __init__(self, game, shooter, change_heading = 0):
         Sprite.__init__(self, game, 'Missile', 'triangle', 0.5, 'yellow', shooter.missiles_shot)
         #self.shapesize(stretch_wid=0.3, stretch_len=0.4, outline=None)
+        self.shooter = shooter
         self.setpos(shooter.xpos, shooter.ypos)
         self.setheading(shooter.heading() + change_heading)
-        self.speed = self.game.config.values['missile_speed']
+        self.speed = self.shooter.missle_speed
 
     @classmethod
     def spawn(cls, game, shooter, change_heading = 0):
@@ -296,23 +299,41 @@ class Powerup(Sprite):
         ]
 
     def __init__(self, game, type, duration = 30):
-        Sprite.__init__(self, game, 'Power Up', 'circle', 1, 'green', game.powerups_tracker)
-        self.speed = 0
+        #Sprite.__init__(self, game, 'Power Up', 'circle', 1, 'green', game.powerups_tracker)
+        sprite_color = ''
         if type in self._types:
+            if type == self._types[0]: # missile_speed
+                sprite_color = 'green'
+            elif type == self._types[1]: # multi_shot
+                sprite_color = 'blue'
+            elif type == self._types[2]: # increment_missiles
+                sprite_color = 'violet'
+            else:
+                logging.error(f'Sprite type of unknown format <{self._type}>')
+            self.speed = 0
             self._type = type
             self.duration = duration
         else:
             logging.error('{} is not a valid type. Expected <{}>'.format(type, self._types))
+            
+        Sprite.__init__(self, game, 'Power Up', 'circle', 1, sprite_color, game.powerups_tracker)
 
     @property
     def type(self):
         return self._type
 
     @classmethod
-    def spawn(cls, game, distance = 50):
+    def spawn(cls, game, type = None, distance = 50):
         """ Spawns an object of type enemy """
-        if len(game.powerups_tracker) < game.powerups_max_number:          
-            new_powerup = cls(game, 'multi_shot')
+        new_powerup = None
+        if len(game.powerups_tracker) < game.powerups_max_number:
+            if type == None:
+                new_powerup = cls(game, random.choice(cls._types)) 
+            else:
+                if type in cls._types:
+                    new_powerup = cls(game, type)
+                else:
+                    raise TypeError(f"Type must be one of the following{cls._types}")
             game.powerups_tracker.append(new_powerup)
             new_powerup.random_position(game.player, distance)
             new_powerup.set_despawn_timer()
