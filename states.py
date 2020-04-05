@@ -5,20 +5,26 @@ class State(object):
     _transition_table = {}
 
     def __init__(self, game, name):
-        """ Represents a simple implementation of a FSM """
+        """ Represents a simple implementation of a state within a FSM """
         self._game = game
         self._name = name
-        pass
+        self.PREP_START_MSG = f"""###################################################
+                                  ### Starting preperation of state <{self.name}> ###
+                                  ################################################### """
+        self.PREP_FIN_MSG = f"+++ Preperation of state {self.name} completed +++"
 
     @property
     def name(self):
+        """ Return the name of the state as string """
         return self._name
 
     @property
     def game(self):
+        """" Return the game object where the state is instatiated """
         return self._game
 
     def transit(self, input):
+        """ Transit to next state by evaluating the user input within the transition table of the current state"""
         if input in self._transition_table:
             logging.debug('Transition to {}'.format(self._transition_table[input]))
             eval(self._transition_table[input])
@@ -41,11 +47,12 @@ class Welcoming(State):
         self.preperation()
        
     def preperation(self):
+        logging.debug(self.PREP_START_MSG)
         self.game.menu.clear_screen()
         self.game.spawn_all_sprites()
         self.game.hide_sprites()
         self.game.menu.welcome_screen()
-        # self.execution()
+        logging.debug(self.PREP_FIN_MSG)
 
     def execution(self):
         self.game.wait_for_input()
@@ -69,12 +76,12 @@ class Running(State):
         State.__init__(self, game, 'running')
         
     def preperation(self):
+        logging.debug(self.PREP_START_MSG)
         self.game.menu.clear_screen()
         self.game.draw_field()
         self.game.draw_score()
         self.game.show_sprites()
-        logging.debug('Preperation of state {} completed'.format(self.name))
-        # self.execution()
+        logging.debug(self.PREP_FIN_MSG)
 
     def execution(self):
         self.game.event_man.check_events()
@@ -93,10 +100,11 @@ class Paused(State):
         State.__init__(self, game, 'paused')
         
     def preperation(self):
+        logging.debug(self.PREP_START_MSG)
         self.game.menu.clear_screen()
         self.game.hide_sprites()
         self.game.menu.pause_screen()
-        # self.execution()
+        logging.debug(self.PREP_FIN_MSG)
 
     def execution(self):
         self.game.wait_for_input()
@@ -115,13 +123,14 @@ class Over(State):
         State.__init__(self, game, 'over')
         
     def preperation(self):
+        logging.debug(self.PREP_START_MSG)
         self.game.menu.clear_screen()
         self.game.despawn_all_sprites()
         self.game.menu.over_screen(self.game.score.current, self.game.score.highscore)
         self.game.score.save_highscore()
         self.game.score.reset_current()
         self.game._lives = self.game.config.values['player_lives']
-        # self.execution()
+        logging.debug(self.PREP_FIN_MSG)
 
     def execution(self):
         self.game.wait_for_input()
@@ -135,9 +144,9 @@ class Exit(State):
         State.__init__(self, game, 'exiting')
         
     def preperation(self):
-        # self.execution()
+        logging.debug(self.PREP_START_MSG)
         self.game.menu.clear_screen()
-        pass
+        logging.debug(self.PREP_FIN_MSG)
 
     def execution(self):
         self.game.exit()

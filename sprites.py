@@ -11,6 +11,7 @@ class Sprite(turtle.Turtle):
     def __init__(self, game, name, spriteshape, spritesize, color, object_tracker):
         turtle.Turtle.__init__(self)
         self.object_tracker = object_tracker
+        self.id = id(self)
         self.game = game
         self._name = name
         self.shape(spriteshape)
@@ -20,7 +21,7 @@ class Sprite(turtle.Turtle):
         self.penup()
         self.radius = spritesize * 10
         self.linked_events = []
-        logging.debug(f"Instance of {self.__class__} created")
+        logging.debug(f"Instance of {self.__class__} created with id: <{self.id}>")
 
     @property
     def xpos(self):
@@ -45,10 +46,10 @@ class Sprite(turtle.Turtle):
             for event_id in self.linked_events:
                 if event_id in self.game.event_man.event_ids: self.game.event_man.delete_event_by_id(event_id)
             self.object_tracker.remove(self)
-            logging.debug(f'Instance of {self.__class__} despawned - currently:{len(self.object_tracker)} existing')
+            logging.debug(f'Instance of {self.__class__} with id <{self.id}> despawned - currently:{len(self.object_tracker)} existing')
             #del self
         except ValueError as valerr:
-            logging.error(f'{valerr} - Cannot despawn {self} as it is not a member of {self.object_tracker}')
+            logging.error(f'{valerr} - Cannot despawn {self.name} with id <{self.id}> as it is not a member of {[i.id for i in self.object_tracker]}')
 
     def move(self):
         """ 
@@ -66,7 +67,7 @@ class Sprite(turtle.Turtle):
         """ Check for collision of the sprite with a boundary defined by field_width and field_height """
         if self.xcor() < - self.game.config.values['field_width']/2 or self.xcor() > self.game.config.values['field_width']/2 or \
         self.ycor() < - self.game.config.values['field_height']/2 or self.ycor() > self.game.config.values['field_height']/2 :
-            logging.debug(f'Collision of <{self._name}> with <boundary> detected!')
+            logging.debug(f'Collision of <{self._name}> with id <{self.id}> with <boundary> detected!')
             return True
         else:
             False
@@ -112,7 +113,7 @@ class Sprite(turtle.Turtle):
     def is_collision(self, other):
         """ Check for collision between self and given sprite <other> """
         if self.distance(other) <= (self.radius + other.radius):
-            logging.debug(f'Collision of <{self._name}> with <{other._name}> detected!')
+            logging.debug(f'Collision of <{self._name}> (id: <{self.id}>) with <{other._name}> (id: <{other.id}>) detected!')
             return True
         else:
             return False
@@ -132,7 +133,7 @@ class Sprite(turtle.Turtle):
                 if self.distance(other) >= (self.radius + other.radius + distance):
                     break
                 else:
-                    logging.debug('<{}> withtin range of {} - retrying with half distance'.format(other, distance))
+                    logging.debug(f'<{other.name}> (id: <{other.id}>) withtin range of {self.name} (id: <{other.id}>) - retrying with half distance'.format(other, distance))
                     distance = distance // 2
             else:
                 break
@@ -163,6 +164,7 @@ class Player(Sprite):
         """ Spawn a player sprite, append it to the tracking list and return it's object """
         game.players_tracker.append(cls(game))
         return game.players_tracker[-1]
+        logging.debug(f"Player it id {id(cls)}")
 
     def turn_left(self):
         self.lt(self.game.config.values['player_turn_rate'])
@@ -187,7 +189,7 @@ class Player(Sprite):
             else:      
                 Missile.spawn(self.game, self)
         else:
-            logging.info(f"Not enough missiles available for next burst {missiles_available} / {self.buffs.burst_size}") 
+            logging.debug(f"Not enough missiles available for next burst {missiles_available} / {self.buffs.burst_size}") 
 
 
 class Missile(Sprite):
@@ -230,9 +232,9 @@ class Enemy(Sprite):
         if len(game.enemies_tracker) < game.enemies_max_number:
             game.enemies_tracker.append(cls(game))
             game.enemies_tracker[-1].random_position(game.player, distance)
-            logging.debug('Enemy spawned - currently:{}/{} existing'.format(len(game.enemies_tracker), game.enemies_max_number))
+            logging.debug(f"Enemy spawned - currently:{len(game.enemies_tracker)}/{game.enemies_max_number}")
         else:
-            logging.debug('Max number of enemies already existing - currently:{}/{} flying'.format(len(game.enemies_tracker), game.enemies_max_number))
+            logging.debug(f"Max number of enemies already existing - currently:{len(game.enemies_tracker)}/{game.enemies_max_number} flying")
 
 
     @property
@@ -266,7 +268,7 @@ class Powerup(Sprite):
             self._type = type
             self.duration = duration
         else:
-            logging.error('{} is not a valid type. Expected <{}>'.format(type, self._types))
+            logging.error(f'{type} is not a valid type. Expected <{self._types}>')
             
         Sprite.__init__(self, game, 'Power Up', 'circle', 1, sprite_color, game.powerups_tracker)
 
@@ -289,7 +291,7 @@ class Powerup(Sprite):
             game.powerups_tracker.append(new_powerup)
             new_powerup.random_position(game.player, distance)
             new_powerup.set_despawn_timer()
-            logging.debug(f'<Powerup>  spawned - currently:{len(game.powerups_tracker)}/{game.powerups_max_number} existing')
+            logging.debug(f'<Powerup> spawned - currently:{len(game.powerups_tracker)}/{game.powerups_max_number} existing')
         else:
             logging.debug(f'Max number of <Powerups> ups already existing - currently:{len(game.powerups_tracker)}/{game.powerups_max_number}')
 
