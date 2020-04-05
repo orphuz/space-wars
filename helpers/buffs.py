@@ -44,7 +44,7 @@ class Buffs():
             if buff.type == self.powerup_types[2]: self.counter_icrementmissiles += 1
 
         self.target.max_missiles_number = self.burst_size * self.max_bursts
-        self.target.missle_speed = self.target.game.config.values['missile_speed'] * (self.counter_missilespeed * 0.5 + 1)
+        self.target.missle_speed = self.missile_speed
 
     def reset_counters(self):
         """ Resets the number of active buffs of each type to <0> """
@@ -54,8 +54,15 @@ class Buffs():
 
     @property
     def burst_size(self):
+        """ Calculate the current burst size based on number of active buffs and return as integer """
         return ((self.counter_multishot + 1) * 2) + -1
     
     @property
     def max_bursts(self):
-        return self.counter_icrementmissiles + 1   
+        """ Calculate the max number of concurrent brusts based on number of active buffs and return as integer """
+        return self.counter_icrementmissiles + 1
+
+    @property
+    def missile_speed(self):
+        """ Calculate the max number of concurrent brusts based on number of active buffs and return as float """
+        return int(self.target.game.config.values['missile_speed'] * (self.counter_missilespeed * 0.5 + 1))
