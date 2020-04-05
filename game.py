@@ -142,7 +142,7 @@ class Game():
         for powerup in powerups:
             #Check if player collects a power up
             if self.player.is_collision(powerup):
-                self.player.apply_buff(powerup)
+                self.player.buffs.apply(powerup)
                 powerup.despawn()
         
         enemies = self.enemies_tracker

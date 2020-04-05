@@ -2,6 +2,7 @@ import random
 import math
 import turtle
 import logging
+from helpers.buffs import Buffs
 
 from functools import partial
 
@@ -152,59 +153,10 @@ class Player(Sprite):
         self.random_heading()
         self.speed = self.game.config.values['player_speed_default']
         self.lives = self.game.config.values['player_lives']
-
         self.missiles_shot = []
-        self.missle_speed = self.game.config.values['missile_speed']
-        self.counter_icrementmissiles = 0      
-        self.counter_multishot = 0
-        self.max_missiles_number =  (self.counter_multishot + 1) * (self.counter_icrementmissiles + 1)
-
-        self.buffs = []
-
-    def apply_buff(self, buff):
-        #TODO: Implement buff mechanism (registering, stacking, etc.)
-        if buff.type in Powerup._types:
-            self.buffs.append(buff)
-            logging.debug(f"Buff <{buff.type}> added")
-            if buff.duration > 0:
-                self.game.event_man.add_timed_event(partial(self.remove_buff, buff), buff.duration, description = f"Remove debuff effect <{buff.type}>")
-        else:
-            logging.error(f"Unknown buff type <{buff.type}>")
-        self.update_buff_effect()
-
-    def remove_buff(self, buff = None):
-        #TODO: Remove buff
-        if buff == None:
-            raise ValueError(f"object to remove must be an istance of class <Powerup>")
-        self.buffs.remove(buff)
-        self.update_buff_effect()
-        logging.debug(f"Buff <{buff.type}> removed")
-
-    def update_buff_effect(self):
-        """ Counts and stores the number of active buffs of each type """
-        self.reset_counter()
-        buffs = self.buffs
-        for buff in buffs:
-            if buff.type == Powerup._types[0]: self.counter_missilespeed += 1
-            if buff.type == Powerup._types[1]: self.counter_multishot += 1
-            if buff.type == Powerup._types[2]: self.counter_icrementmissiles += 1
-
-        self.max_missiles_number = self.burst_size * self.max_bursts
-        self.missle_speed = self.game.config.values['missile_speed'] * (self.counter_missilespeed * 0.5 + 1)
-
-    def reset_counter(self):
-        """ Resets the number of active buffs of each type to <0> """
-        self.counter_missilespeed = 0
-        self.counter_multishot = 0
-        self.counter_icrementmissiles = 0
-
-    @property
-    def burst_size(self):
-        return ((self.counter_multishot + 1) * 2) + -1
-    
-    @property
-    def max_bursts(self):
-        return self.counter_icrementmissiles + 1   
+        self.missile_speed = self.game.config.values['missile_speed']
+        self.max_missiles_number = 1
+        self.buffs = Buffs(self, Powerup._types)
 
     @classmethod
     def spawn(cls, game):
@@ -227,15 +179,15 @@ class Player(Sprite):
     def fire(self):
         """ Fire missles modified by current active buffs """
         missiles_available = self.max_missiles_number - len(self.missiles_shot)
-        if missiles_available >= self.burst_size:
-            if self.counter_multishot > 0:
-                for i in range(self.burst_size):
-                    angle = ((20 / (self.burst_size - 1)) * i - 10 )
+        if missiles_available >= self.buffs.burst_size:
+            if self.buffs.counter_multishot > 0:
+                for i in range(self.buffs.burst_size):
+                    angle = ((20 / (self.buffs.burst_size - 1)) * i - 10 )
                     Missile.spawn(self.game, self, angle)
             else:      
                 Missile.spawn(self.game, self)
         else:
-            logging.info(f"Not enough missiles available for next burst {missiles_available} / {self.burst_size}") 
+            logging.info(f"Not enough missiles available for next burst {missiles_available} / {self.buffs.burst_size}") 
 
 
 class Missile(Sprite):
